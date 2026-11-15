@@ -67,13 +67,18 @@ jobs:
       - name: Build and run
         run: |
           set -u
-          cp .github/mcpp/test.bat test.bat
+          # The script with both line endings: a batch file from Unix ends its
+          # lines in LF alone, one from Windows in CR LF.
+          tr -d '\r' < .github/mcpp/test.bat > test.bat
+          awk '{ printf "%s\r\n", $0 }' test.bat > test-crlf.bat
           failed=
           for t in ${{ matrix.targets }}; do
             echo "::group::$t"
             if mcpp build --release --target "$t" \
                && mcpp run cmd.exe --release --target "$t" -- /c test.bat > "run-$t.txt" \
-               && sh .github/mcpp/check.sh "run-$t.txt"; then
+               && sh .github/mcpp/check.sh "run-$t.txt" \
+               && mcpp run cmd.exe --release --target "$t" -- /c test-crlf.bat > "run-$t-crlf.txt" \
+               && sh .github/mcpp/check.sh "run-$t-crlf.txt"; then
               echo "$t: runs" >> "$GITHUB_STEP_SUMMARY"
             else
               echo "::error::$t"; cat "run-$t.txt" 2> /dev/null; failed="$failed $t"
@@ -254,22 +259,6 @@ jobs:
           exe=$(ls cmd.exe* | head -1)
           file "$exe" || true
           "./$exe" /c ver < /dev/null
-      # Each command alone, then the script traced, each with a time limit,
-      # to find where the run stops.
-      - name: Probe
-        working-directory: out
-        timeout-minutes: 5
-        run: |
-          exe=./$(ls cmd.exe* | head -1)
-          for c in "set /a N=1" "if 1 lss 3 echo lt" "for %f in (a b) do echo %f" \
-                   "md okp" "echo x> okp\f1.txt" "copy okp\f1.txt okp\f2.txt" \
-                   "ren okp\f2.txt f3.txt" "type okp\f3.txt" "dir /b okp" \
-                   "del okp\f1.txt okp\f3.txt" "rd okp"; do
-            echo "== $c"
-            timeout 20 "$exe" /c "$c" < /dev/null && s=0 || s=$?; echo "-- status $s"
-          done
-          sed 's/^@echo off/@echo on/' test.bat > trace.bat
-          timeout 30 "$exe" /c trace.bat < /dev/null && s=0 || s=$?; echo "-- status $s"
       - name: Run
         working-directory: out
         timeout-minutes: 5
