@@ -1,0 +1,78 @@
+name: probe
+
+# Temporary: how mcpp 2026.11.15.1 finds and starts a runner that is a batch
+# file on Windows. Closed after the result is recorded.
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+env:
+  MCPP_VERSION: 2026.11.15.1
+  XLINGS_NON_INTERACTIVE: '1'
+  MSYS_NO_PATHCONV: '1'
+
+jobs:
+  probe:
+    runs-on: windows-2022
+    timeout-minutes: 40
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Install mcpp
+        shell: pwsh
+        run: |
+          irm https://d2learn.org/xlings-install.ps1.txt | iex
+          "$env:USERPROFILE\.xlings\subos\current\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+      - name: mcpp
+        run: |
+          for attempt in 1 2 3 4 5; do
+            xlings update > /dev/null 2>&1 || true
+            xlings install "mcpp@$MCPP_VERSION" -y -g && break
+            sleep 60
+          done
+          mcpp --version
+          mcpp self config --mirror GLOBAL
+      - name: Project
+        run: |
+          mkdir -p p/src tools
+          cat > p/mcpp.toml <<'T'
+          [package]
+          name = "probe"
+          version = "0.1.0"
+
+          [target.x86_64-windows-gnu.runners]
+          bare    = ["probe-runner", "{}"]
+          withext = ["probe-runner.bat", "{}"]
+          relpath = ["../tools/probe-runner", "{}"]
+          exe     = ["probe-exe", "{}"]
+          T
+          sed -i 's/^          //' p/mcpp.toml
+          cat > p/src/main.c <<'C'
+          #include <stdio.h>
+          int main(int argc, char **argv) {
+              int i;
+              for (i = 1; i < argc; i++) printf("ARG[%d]=<%s>\n", i, argv[i]);
+              return 7;
+          }
+          C
+          printf '@echo off\r\necho BAT-RUNNER got: %%*\r\n%%*\r\nexit /b %%ERRORLEVEL%%\r\n' > tools/probe-runner.bat
+          printf '#!/bin/sh\necho POSIX-SCRIPT-RUNNER\nexec "$@"\n' > tools/probe-runner
+          cat p/mcpp.toml; cat tools/probe-runner.bat
+      - name: Cases
+        run: |
+          export PATH="$PWD/tools:$PATH"
+          cd p
+          mcpp build --target x86_64-windows-gnu 2>&1 | tail -5
+          mcpp run --target x86_64-windows-gnu --list-runners 2>&1 || echo "rc=$?"
+          run() { echo "=== $*"; "$@" 2>&1 && echo "rc=0" || echo "rc=$?"; }
+          run mcpp run --target x86_64-windows-gnu --no-runner -- plain "a b"
+          for r in bare withext relpath exe; do
+            run mcpp run --target x86_64-windows-gnu --runner $r -- plain "a b"
+          done
+          run mcpp run --target x86_64-windows-gnu --runner withext -- 'q"uote' 'x&echo INJECTED' '%PATH%' 'a^b'
+          echo "=== env override with a bare name"
+          MCPP_TARGET_X86_64_WINDOWS_GNU_RUNNER="probe-runner" mcpp run --target x86_64-windows-gnu -- plain 2>&1 && echo rc=0 || echo "rc=$?"
