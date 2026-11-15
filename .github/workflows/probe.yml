@@ -74,12 +74,18 @@ jobs:
           mcpp build --target x86_64-windows-gnu 2>&1 | tail -5
           mcpp run --target x86_64-windows-gnu --list-runners 2>&1 || echo "rc=$?"
           run() { echo "=== $*"; "$@" 2>&1 && echo "rc=0" || echo "rc=$?"; }
-          run mcpp run --target x86_64-windows-gnu --no-runner -- plain "a b"
-          for r in bare withext relpath exe; do
-            run mcpp run --target x86_64-windows-gnu --runner $r -- plain "a b"
-          done
-          run mcpp run --target x86_64-windows-gnu --no-runner -- 'q"uote' 'x&echo INJECTED-DIRECT' '%OS%' 'a^b'
-          run mcpp run --target x86_64-windows-gnu --runner withext -- 'q"uote' 'x&echo INJECTED-BAT' '%OS%' 'a^b'
-          run mcpp run --target x86_64-windows-gnu --runner withext -- 'x&echo INJECTED-BAT2'
+          real=$(ls "$USERPROFILE"/.xlings/data/xpkgs/xim-x-mcpp/*/bin/mcpp.exe | head -1)
+          echo "real=$real"; ls -l "$(which mcpp)"* "$real"
+          echo "--- the shim alone"
+          run mcpp --version 'q"uote' 'x&echo INJECTED-SHIM'
+          echo "--- the real mcpp alone"
+          run "$real" --version 'q"uote' 'x&echo INJECTED-REAL-VERSION'
+          echo "--- the real mcpp, program started directly"
+          run "$real" run --target x86_64-windows-gnu --no-runner -- 'q"uote' 'x&echo INJECTED-REAL-DIRECT' '%OS%' 'a^b'
+          echo "--- the real mcpp, batch-file runner"
+          run "$real" run --target x86_64-windows-gnu --runner withext -- 'q"uote' 'x&echo INJECTED-REAL-BAT' '%OS%' 'a^b'
+          echo "--- the real mcpp, batch-file runner, no quote in the arguments"
+          run "$real" run --target x86_64-windows-gnu --runner withext -- 'x&echo INJECTED-REAL-BAT2' '%OS%' 'a^b' 'a b'
+          run "$real" run --target x86_64-windows-gnu --runner exe -- plain 2>&1 | tail -1
           echo "=== env override with a bare name"
           MCPP_TARGET_X86_64_WINDOWS_GNU_RUNNER="probe-runner" mcpp run --target x86_64-windows-gnu -- plain 2>&1 && echo rc=0 || echo "rc=$?"
