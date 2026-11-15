@@ -44,6 +44,10 @@ jobs:
           name = "probe"
           version = "0.1.0"
 
+          [targets.probe]
+          kind = "bin"
+          main = "src/main.c"
+
           [target.x86_64-windows-gnu.runners]
           bare    = ["probe-runner", "{}"]
           withext = ["probe-runner.bat", "{}"]
@@ -66,6 +70,7 @@ jobs:
         run: |
           export PATH="$PWD/tools:$PATH"
           cd p
+          echo "=== which mcpp"; which -a mcpp; ls "$(dirname "$(which mcpp)")" | head -20
           mcpp build --target x86_64-windows-gnu 2>&1 | tail -5
           mcpp run --target x86_64-windows-gnu --list-runners 2>&1 || echo "rc=$?"
           run() { echo "=== $*"; "$@" 2>&1 && echo "rc=0" || echo "rc=$?"; }
@@ -73,6 +78,8 @@ jobs:
           for r in bare withext relpath exe; do
             run mcpp run --target x86_64-windows-gnu --runner $r -- plain "a b"
           done
-          run mcpp run --target x86_64-windows-gnu --runner withext -- 'q"uote' 'x&echo INJECTED' '%PATH%' 'a^b'
+          run mcpp run --target x86_64-windows-gnu --no-runner -- 'q"uote' 'x&echo INJECTED-DIRECT' '%OS%' 'a^b'
+          run mcpp run --target x86_64-windows-gnu --runner withext -- 'q"uote' 'x&echo INJECTED-BAT' '%OS%' 'a^b'
+          run mcpp run --target x86_64-windows-gnu --runner withext -- 'x&echo INJECTED-BAT2'
           echo "=== env override with a bare name"
           MCPP_TARGET_X86_64_WINDOWS_GNU_RUNNER="probe-runner" mcpp run --target x86_64-windows-gnu -- plain 2>&1 && echo rc=0 || echo "rc=$?"
