@@ -239,23 +239,34 @@ jobs:
   windows-arm64:
     needs: cross
     runs-on: windows-11-arm
+    timeout-minutes: 20
     defaults:
       run:
         shell: bash
     steps:
       - uses: actions/download-artifact@v4
         with: { name: cmd-aarch64-windows-gnu, path: out }
+      - name: Start
+        working-directory: out
+        timeout-minutes: 3
+        run: |
+          ls -l
+          exe=$(ls cmd.exe* | head -1)
+          file "$exe" || true
+          "./$exe" /c ver < /dev/null
       - name: Run
         working-directory: out
+        timeout-minutes: 5
         run: |
           exe=$(ls cmd.exe* | head -1)
-          "./$exe" /c test.bat > run.txt
+          "./$exe" /c test.bat < /dev/null > run.txt
           sh check.sh run.txt
           echo "aarch64-windows-gnu: runs" >> "$GITHUB_STEP_SUMMARY"
 
   macos-x86_64:
     needs: cross
     runs-on: macos-15-intel
+    timeout-minutes: 20
     steps:
       - uses: actions/download-artifact@v4
         with: { name: cmd-x86_64-macos-musl, path: out }
