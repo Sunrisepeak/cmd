@@ -184,7 +184,7 @@ mcpp run --target x86_64-openkal -- /c ver
 ```
 
 <details>
-<summary>目标</summary>
+<summary>更多目标：Linux、Windows、macOS、FreeBSD、Android、WebAssembly、openkal 映像、UEFI 与 DOS</summary>
 
 **运行**：测试批处理输出与 Linux x86_64 相同；**启动**：解释器能启动并退出；**构建**：未运行。
 

@@ -180,7 +180,7 @@ mcpp run --target x86_64-openkal -- /c ver
 ```
 
 <details>
-<summary>Targets</summary>
+<summary>More targets: Linux, Windows, macOS, FreeBSD, Android, WebAssembly, openkal images, UEFI and DOS</summary>
 
 **runs**: a test batch script gives the same output as on Linux x86_64; **starts**: the interpreter starts and exits; **builds**: not run.
 

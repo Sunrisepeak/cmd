@@ -1,0 +1,16 @@
+1
+2
+3
+N=3
+sub args hi there
+errorlevel=5
+item a
+item b
+item c
+x
+f1.txt
+f3.txt
+okt removed
+42
+X=42
+done

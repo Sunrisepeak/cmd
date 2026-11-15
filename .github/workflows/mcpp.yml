@@ -1,0 +1,261 @@
+name: mcpp
+
+# Builds cmd.exe and COMMAND.COM with mcpp for every target in the README's
+# table. A target is run where a machine or an emulator for it exists, and the
+# output of .github/mcpp/test.bat is compared with .github/mcpp/expected.txt;
+# a target with no runner is built.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+env:
+  MCPP_VERSION: 2026.11.15.1
+  XLINGS_VERSION: v2026.10.26.1
+  XLINGS_NON_INTERACTIVE: '1'
+  MSYS_NO_PATHCONV: '1'
+
+jobs:
+  # Built and run on the machine itself.
+  native:
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-24.04,     targets: 'x86_64-linux-gnu x86_64-linux-musl i686-linux-musl wasm32-emscripten x86_64-openkal' }
+          - { os: ubuntu-24.04-arm, targets: 'aarch64-linux-gnu aarch64-linux-musl aarch64-openkal' }
+          - { os: macos-15,         targets: 'aarch64-macos aarch64-macos-musl' }
+          - { os: windows-2022,     targets: 'x86_64-windows-gnu x86_64-windows-musl' }
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install mcpp (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/openxlings/xlings/main/tools/other/quick_install.sh | bash -s "$XLINGS_VERSION"
+          echo "$HOME/.xlings/subos/current/bin" >> "$GITHUB_PATH"
+
+      - name: Install mcpp (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          irm https://d2learn.org/xlings-install.ps1.txt | iex
+          "$env:USERPROFILE\.xlings\subos\current\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - name: mcpp ${{ env.MCPP_VERSION }}
+        run: |
+          for attempt in 1 2 3 4 5; do
+            xlings update > /dev/null 2>&1 || true
+            xlings install "mcpp@$MCPP_VERSION" -y -g && break
+            [ "$attempt" = 5 ] && { echo "::error::mcpp could not be installed"; exit 1; }
+            sleep 60
+          done
+          mcpp --version
+          mcpp self config --mirror GLOBAL
+
+      - name: Build and run
+        run: |
+          set -u
+          cp .github/mcpp/test.bat test.bat
+          failed=
+          for t in ${{ matrix.targets }}; do
+            echo "::group::$t"
+            if mcpp build --release --target "$t" \
+               && mcpp run cmd.exe --release --target "$t" -- /c test.bat > "run-$t.txt" \
+               && sh .github/mcpp/check.sh "run-$t.txt"; then
+              echo "$t: runs" >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "::error::$t"; cat "run-$t.txt" 2> /dev/null; failed="$failed $t"
+            fi
+            echo "::endgroup::"
+          done
+          [ -z "$failed" ] || { echo "::error::failed:$failed"; exit 1; }
+
+  # Built on Linux x86_64; run by another machine, an emulator, or not at all.
+  cross:
+    name: ${{ matrix.target }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { target: aarch64-windows-gnu,   check: artifact }
+          - { target: x86_64-macos-musl,     check: artifact, debug: true }
+          - { target: x86_64-freebsd,        check: artifact }
+          - { target: aarch64-freebsd,       check: artifact }
+          - { target: x86_64-linux-android,  check: artifact }
+          - { target: aarch64-linux-android, check: build }
+          - { target: openkal,               check: artifact }
+          - { target: i686-openkal,          check: build }
+          - { target: x86_64-uefi,           check: start }
+          - { target: i686-dos-musl,         check: start }
+          - { target: i586-dos-djgpp,        check: dos }
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install mcpp
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/openxlings/xlings/main/tools/other/quick_install.sh | bash -s "$XLINGS_VERSION"
+          export PATH="$HOME/.xlings/subos/current/bin:$PATH"
+          echo "$HOME/.xlings/subos/current/bin" >> "$GITHUB_PATH"
+          for attempt in 1 2 3 4 5; do
+            xlings update > /dev/null 2>&1 || true
+            xlings install "mcpp@$MCPP_VERSION" -y -g && break
+            [ "$attempt" = 5 ] && { echo "::error::mcpp could not be installed"; exit 1; }
+            sleep 60
+          done
+          mcpp --version
+          mcpp self config --mirror GLOBAL
+
+      - name: Build
+        run: |
+          set -euo pipefail
+          t='${{ matrix.target }}'
+          mkdir -p out
+          if [ "$t" = openkal ]; then
+            # Both architectures as one package that carries okrun for the systems it runs on.
+            mcpp pack --target openkal --all-programs --mode self-contained --systems all
+            tar -xzf target/dist/cmd-*-openkal-bundle-all.tar.gz -C out
+          else
+            mcpp build ${{ matrix.debug && ' ' || '--release' }} --target "$t"
+            find target -path '*/bin/*' -type f \( -name 'cmd.exe*' -o -name 'COMMAND.COM*' \) -exec cp {} out/ \;
+          fi
+          cp .github/mcpp/test.bat .github/mcpp/expected.txt .github/mcpp/check.sh out/
+          ls -l out
+          echo "${t}: builds" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Start (UEFI and openkal DOS)
+        if: matrix.check == 'start'
+        run: |
+          set -o pipefail
+          t='${{ matrix.target }}'
+          mcpp run cmd.exe --release --target "$t" -- /c echo started 2>&1 | tee start.txt
+          # The UEFI runner passes no arguments: the interpreter prints its banner and reads EOF.
+          grep -Eq '^started|Massivehard' start.txt || { echo "::error::$t did not start"; exit 1; }
+          echo "${t}: starts" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Run test.bat in DOSBox
+        if: matrix.check == 'dos'
+        run: |
+          set -euo pipefail
+          mcpp run cmd.exe --release --target i586-dos-djgpp -- /c echo started
+          dirun=$(find "$HOME" -path '*xim-x-dirun*/bin/dirun' -type f | sort -V | tail -1)
+          profile=$(find "$HOME" -path '*xim-x-dosbox-staging*/dirun.toml' -type f | head -1)
+          "$dirun" --payload out/cmd.exe --profile "$profile" --file "$PWD/out/test.bat=TEST.BAT" -- /c TEST.BAT > run.txt
+          sh out/check.sh run.txt
+          echo "i586-dos-djgpp: runs" >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        if: matrix.check == 'artifact'
+        with:
+          name: cmd-${{ matrix.target }}
+          path: out/
+
+  windows-arm64:
+    needs: cross
+    runs-on: windows-11-arm
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/download-artifact@v4
+        with: { name: cmd-aarch64-windows-gnu, path: out }
+      - name: Run
+        working-directory: out
+        run: |
+          exe=$(ls cmd.exe* | head -1)
+          "./$exe" /c test.bat > run.txt
+          sh check.sh run.txt
+          echo "aarch64-windows-gnu: runs" >> "$GITHUB_STEP_SUMMARY"
+
+  macos-x86_64:
+    needs: cross
+    runs-on: macos-15-intel
+    steps:
+      - uses: actions/download-artifact@v4
+        with: { name: cmd-x86_64-macos-musl, path: out }
+      - name: Run
+        working-directory: out
+        run: |
+          chmod +x cmd.exe
+          ./cmd.exe /c test.bat > run.txt
+          sh check.sh run.txt
+          echo "x86_64-macos-musl: runs" >> "$GITHUB_STEP_SUMMARY"
+
+  freebsd:
+    name: freebsd-${{ matrix.arch }}
+    needs: cross
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [x86_64, aarch64]
+    steps:
+      - uses: actions/download-artifact@v4
+        with: { name: 'cmd-${{ matrix.arch }}-freebsd', path: native }
+      - uses: actions/download-artifact@v4
+        with: { name: cmd-openkal, path: image }
+      - name: Run in FreeBSD
+        uses: vmactions/freebsd-vm@v1
+        with:
+          arch: ${{ matrix.arch }}
+          usesh: true
+          run: |
+            uname -a
+            top=$(pwd)
+            chmod +x native/cmd.exe "$top"/image/*/libexec/okrun/*/okrun
+            (cd native && ./cmd.exe /c test.bat > run.txt 2>&1)
+            if [ '${{ matrix.arch }}' = x86_64 ]; then
+              # The package's okrun, named directly: its launcher looks for
+              # libexec/okrun/FreeBSD-x86_64 (uname -s, not lowered).
+              k=$(echo "$top"/image/cmd-*-openkal-bundle-all)
+              (cd native && "$k/libexec/okrun/freebsd-x86_64/okrun" "$k/lib/x86_64/cmd.exe.oke" /c test.bat > image.txt 2>&1)
+            fi
+      - name: Verdict
+        run: |
+          set -e
+          sh native/check.sh native/run.txt
+          echo "${{ matrix.arch }}-freebsd: runs" >> "$GITHUB_STEP_SUMMARY"
+          if [ '${{ matrix.arch }}' = x86_64 ]; then
+            sh native/check.sh native/image.txt
+            echo "openkal image under okrun on FreeBSD: runs" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+  android:
+    needs: cross
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/download-artifact@v4
+        with: { name: cmd-x86_64-linux-android, path: out }
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Run in the emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          arch: x86_64
+          target: google_apis
+          script: |
+            adb push out/cmd.exe out/test.bat /data/local/tmp/
+            adb shell 'cd /data/local/tmp && chmod 755 cmd.exe && ./cmd.exe /c test.bat' > out/run.txt
+      - name: Verdict
+        run: |
+          sh out/check.sh out/run.txt
+          echo "x86_64-linux-android: runs" >> "$GITHUB_STEP_SUMMARY"
