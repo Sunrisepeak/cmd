@@ -266,10 +266,10 @@ jobs:
                    "ren okp\f2.txt f3.txt" "type okp\f3.txt" "dir /b okp" \
                    "del okp\f1.txt okp\f3.txt" "rd okp"; do
             echo "== $c"
-            timeout 20 "$exe" /c "$c" < /dev/null; echo "-- status $?"
+            timeout 20 "$exe" /c "$c" < /dev/null && s=0 || s=$?; echo "-- status $s"
           done
           sed 's/^@echo off/@echo on/' test.bat > trace.bat
-          timeout 30 "$exe" /c trace.bat < /dev/null; echo "-- status $?"
+          timeout 30 "$exe" /c trace.bat < /dev/null && s=0 || s=$?; echo "-- status $s"
       - name: Run
         working-directory: out
         timeout-minutes: 5
