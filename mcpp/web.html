@@ -5,43 +5,131 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{{title}}</title>
 <style>
-  body { font: 14px/1.4 system-ui, sans-serif; margin: 0 auto; max-width: 960px; padding: 1rem; background: #111; color: #ddd; }
-  h1 { font-size: 1.2rem; }
-  textarea, input, pre { font: 13px/1.35 ui-monospace, Consolas, monospace; background: #000; color: #ccc; border: 1px solid #444; box-sizing: border-box; width: 100%; }
-  textarea { height: 14rem; padding: .5rem; }
-  input { padding: .4rem; }
-  pre { min-height: 12rem; padding: .5rem; white-space: pre-wrap; }
-  button { margin: .4rem .4rem .4rem 0; padding: .3rem .8rem; }
-  .err { color: #e88; }
-  small { color: #888; }
+  :root {
+    --bg: #f6f7f9; --panel: #fff; --line: #d9dde3; --text: #1f2328; --dim: #656d76;
+    --term: #0d1117; --term-text: #c9d1d9; --accent: #0969da; --err: #f85149;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #0d1117; --panel: #161b22; --line: #30363d; --text: #e6edf3; --dim: #8b949e;
+            --term: #010409; --accent: #4493f8; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 1180px; margin: 0 auto; padding: 1.5rem 1rem 1rem; }
+  header { display: flex; flex-wrap: wrap; align-items: baseline; gap: .25rem 1rem; }
+  h1 { margin: 0; font-size: 1.4rem; }
+  h1 + p { margin: 0; color: var(--dim); }
+  nav { margin-left: auto; display: flex; gap: 1rem; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .panes { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem; }
+  @media (max-width: 800px) { .panes { grid-template-columns: 1fr; } section { height: 22rem; } nav { margin-left: 0; } }
+  section { display: flex; flex-direction: column; background: var(--panel);
+            border: 1px solid var(--line); border-radius: 8px; overflow: hidden; height: 30rem; }
+  .bar { display: flex; align-items: center; gap: .5rem; padding: .45rem .6rem;
+         border-bottom: 1px solid var(--line); font-size: 13px; color: var(--dim); }
+  .bar .grow { flex: 1; }
+  select, button { font: inherit; font-size: 13px; color: var(--text); background: var(--panel);
+                   border: 1px solid var(--line); border-radius: 6px; padding: .2rem .6rem; cursor: pointer; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  button:disabled { opacity: .5; cursor: default; }
+  .mono { font: 13px/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  textarea { flex: 1; resize: none; border: 0; outline: 0; padding: .7rem; tab-size: 4;
+             background: var(--panel); color: var(--text); }
+  .term { flex: 1; display: flex; flex-direction: column; background: var(--term); color: var(--term-text);
+          min-height: 0; cursor: text; }
+  .term .bar { background: var(--panel); }
+  #out { flex: 1; margin: 0; padding: .7rem; overflow: auto; white-space: pre-wrap; word-break: break-all; }
+  #out .cmd { color: #7ee787; }
+  #out .err { color: var(--err); }
+  #out .note { color: #8b949e; }
+  .prompt { display: flex; align-items: center; gap: .4rem; padding: .45rem .7rem; border-top: 1px solid #30363d; }
+  .prompt input { flex: 1; background: transparent; border: 0; outline: 0; color: var(--term-text); }
+  footer { margin-top: 1rem; color: var(--dim); font-size: 13px; }
+  footer p { margin: .3rem 0; }
+  code { font-size: 12.5px; background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 0 .3rem; }
+  kbd { font-size: 11px; border: 1px solid var(--line); border-radius: 4px; padding: 0 .3rem; }
 </style>
 </head>
 <body>
-<h1>cmd for Unix, compiled to WebAssembly</h1>
-<p><small>Each run starts the interpreter with <code>/c</code> in a fresh module; the files under
-<code>\work</code> carry over from run to run, environment variables do not. The page has no
-interactive prompt: a browser cannot block while it waits for a key.</small></p>
-<textarea id="script" spellcheck="false">@echo off
-setlocal enabledelayedexpansion
-set N=0
-:loop
-set /a N+=1 >nul
-if !N! lss 5 goto loop
-echo counted to !N!
-for %%f in (alpha beta gamma) do echo item %%f
-md demo 2>nul
-echo hello from a file> demo\note.txt
-type demo\note.txt
-dir /b demo
-ver
-</textarea>
-<button id="run-script">Run the script</button>
-<input id="line" placeholder="a command, e.g.  dir /b  or  set /a 6*7" autocomplete="off">
-<pre id="out"></pre>
+<main>
+  <header>
+    <h1>cmd</h1>
+    <p>The Windows command interpreter, reimplemented in C89 and running here as WebAssembly.</p>
+    <nav>
+      <a href="https://github.com/ChenPi11/cmd">Source</a>
+      <a href="https://github.com/ChenPi11/cmd#readme">README</a>
+      <a href="https://github.com/mcpp-community/mcpp">mcpp</a>
+      <a href="https://emscripten.org">Emscripten</a>
+    </nav>
+  </header>
+
+  <div class="panes">
+    <section>
+      <div class="bar">
+        <span>script.bat</span>
+        <select id="example" aria-label="Examples"></select>
+        <span class="grow"></span>
+        <span id="status">Loading…</span>
+        <button id="run" class="primary" disabled title="Ctrl+Enter">Run</button>
+      </div>
+      <textarea id="script" class="mono" spellcheck="false" aria-label="Batch file"></textarea>
+    </section>
+
+    <section class="term">
+      <div class="bar">
+        <span>Output</span><span class="grow"></span>
+        <button id="clear">Clear</button>
+      </div>
+      <pre id="out" class="mono"></pre>
+      <label class="prompt mono"><span>\work&gt;</span>
+        <input id="line" class="mono" autocomplete="off" spellcheck="false"
+               placeholder="type a command, e.g. dir /b" aria-label="Command"></label>
+    </section>
+  </div>
+
+  <footer>
+    <p>Each run starts <code>cmd /c</code> in a fresh WebAssembly instance. Files under <code>\work</code>
+      persist between runs; environment variables do not. There is no interactive console, since a page cannot
+      block while it waits for a key, so <code>pause</code> and <code>set /p</code> read end of file.
+      Press <kbd>Ctrl</kbd>+<kbd>Enter</kbd> to run the script.</p>
+    <p>Built with <a href="https://github.com/mcpp-community/mcpp">mcpp</a> for <code>wasm32-emscripten</code>:
+      <code>mcpp pack cmd.exe --profile web --target wasm32-emscripten --pkg-format web</code>.
+      The same sources also build for Linux, Windows, macOS, FreeBSD, Android,
+      <a href="https://github.com/mcpplibs/openkal">openkal</a> images, UEFI and DOS
+      (<a href="https://github.com/ChenPi11/cmd#readme">README</a>).</p>
+  </footer>
+</main>
+
 <script src="{{name}}.js"></script>
 <script>
-  const view = document.getElementById('out');
-  let saved = { dirs: [], files: {} };           // \work, carried between runs
+  const EXAMPLES = {
+    'Loops and arithmetic': [
+      '@echo off', 'setlocal enabledelayedexpansion', 'set N=0', ':loop', 'set /a N+=1 >nul',
+      'if !N! lss 5 goto loop', 'echo counted to !N!', 'set /a "SQ=N*N" >nul', 'echo %N% squared is !SQ!'],
+    'Files': [
+      '@echo off', 'md demo 2>nul', 'echo hello from a file> demo\\note.txt', 'echo second line>> demo\\note.txt',
+      'type demo\\note.txt', 'copy demo\\note.txt demo\\copy.txt >nul', 'dir /b demo'],
+    'for and call': [
+      '@echo off', 'for %%f in (alpha beta gamma) do call :show %%f', 'for /l %%i in (1,1,3) do echo step %%i',
+      'goto :eof', ':show', 'echo item %1'],
+    'Variables': [
+      '@echo off', 'set NAME=World', 'echo Hello, %NAME%!', 'set NAME', 'echo %NAME:o=0%', 'ver'],
+  };
+
+  const $ = (id) => document.getElementById(id);
+  const view = $('out'), state = $('status'), runButton = $('run'), script = $('script');
+  let saved = { dirs: [], files: {} };   // \work, carried between runs
+  let busy = false;
+
+  function say(text, cls) {
+    const div = document.createElement('div');
+    if (cls) div.className = cls;
+    div.textContent = text;
+    view.appendChild(div);
+    view.scrollTop = view.scrollHeight;
+  }
 
   function snapshot(FS, root) {
     const dirs = [], files = {};
@@ -55,12 +143,14 @@ ver
     return { dirs, files };
   }
 
-  // Runs cmd.exe with argv in a new module over \work; resolves {status, lines}.
+  // Runs cmd.exe with argv in a new instance over \work; resolves {status, lines}.
+  // A line written to standard error starts with U+0000.
   window.runCmd = async function (argv, extra) {
-    const lines = [];
+    const lines = [], strip = (s) => s.replace(/\x1b\[[0-9;?]*[A-Za-z]/g, '');
     const mod = await createCmd({
-      print: (s) => lines.push(s.replace(/\x1b\[[0-9;]*m/g, '')),
-      printErr: (s) => lines.push('\u0000' + s.replace(/\x1b\[[0-9;]*m/g, '')),
+      print: (s) => lines.push(strip(s)),
+      printErr: (s) => lines.push('\u0000' + strip(s)),
+      stdin: () => null,
     });
     const FS = mod.FS;
     FS.mkdir('/work');
@@ -68,35 +158,64 @@ ver
     for (const [p, data] of Object.entries(saved.files)) FS.writeFile(p, data);
     for (const [p, text] of Object.entries(extra || {})) FS.writeFile('/work/' + p, text);
     FS.chdir('/work');
-    let status;
-    try { status = mod.callMain(argv); } catch (e) { status = e && e.status !== undefined ? e.status : String(e); }
+    let code;
+    try { code = mod.callMain(argv); } catch (e) { code = e && e.status !== undefined ? e.status : String(e); }
     saved = snapshot(FS, '/work');
-    return { status, lines };
+    return { status: code, lines };
   };
 
-  function show(cmdline, result) {
-    const head = document.createElement('div');
-    head.textContent = '> ' + cmdline;
-    view.appendChild(head);
-    for (const l of result.lines) {
-      const div = document.createElement('div');
-      if (l.startsWith('\u0000')) { div.className = 'err'; div.textContent = l.slice(1); }
-      else div.textContent = l;
-      view.appendChild(div);
+  async function run(label, argv, extra) {
+    if (busy) return;
+    busy = true; runButton.disabled = true; state.textContent = 'Running…';
+    say('\\work> ' + label, 'cmd');
+    try {
+      const r = await runCmd(argv, extra);
+      for (const l of r.lines) l.startsWith('\u0000') ? say(l.slice(1), 'err') : say(l);
+      if (r.status !== 0) say('exit status ' + r.status, 'note');
+      state.textContent = 'Ready';
+    } catch (e) {
+      say(String(e && e.message || e), 'err');
+      state.textContent = 'Failed';
     }
-    view.scrollTop = view.scrollHeight;
+    busy = false; runButton.disabled = false;
   }
 
-  document.getElementById('run-script').onclick = async () => {
-    const text = document.getElementById('script').value.replace(/\r?\n/g, '\r\n');
-    show('cmd /c script.bat', await runCmd(['/c', 'script.bat'], { 'script.bat': text }));
-  };
-  document.getElementById('line').addEventListener('keydown', async (e) => {
+  for (const name of Object.keys(EXAMPLES)) $('example').add(new Option(name, name));
+  const load = () => { script.value = EXAMPLES[$('example').value].join('\n') + '\n'; };
+  $('example').onchange = load;
+  load();
+
+  const runScript = () => run('script.bat', ['/c', 'script.bat'],
+                              { 'script.bat': script.value.replace(/\r?\n/g, '\r\n') });
+  runButton.onclick = runScript;
+  script.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); runScript(); }
+  });
+  $('line').addEventListener('keydown', (e) => {
     if (e.key !== 'Enter' || !e.target.value.trim()) return;
     const line = e.target.value; e.target.value = '';
-    show(line, await runCmd(['/c', line]));
+    run(line, ['/c', line]);
   });
-  window.cmdReady = true;
+  $('clear').onclick = () => { view.textContent = ''; };
+  document.querySelector('.term').addEventListener('click', (e) => {
+    if (!getSelection().toString() && e.target.tagName !== 'BUTTON') $('line').focus();
+  });
+
+  if (location.protocol === 'file:') {
+    state.textContent = 'Needs a server';
+    say('A page opened from disk cannot load {{name}}.wasm (browsers refuse file: requests).', 'err');
+    say('Serve this directory instead, e.g.  python3 -m http.server -d <this directory>', 'note');
+    say('and open http://localhost:8000/, or use the online page linked from the README.', 'note');
+  } else if (typeof createCmd !== 'function') {
+    state.textContent = 'Failed';
+    say('{{name}}.js did not load. Open index.html from the directory mcpp pack writes (…/web/).', 'err');
+  } else {
+    // One instance up front, so the first click is not the one that compiles.
+    createCmd({ say() {}, printErr() {} }).then(() => {
+      state.textContent = 'Ready'; runButton.disabled = false; window.cmdReady = true;
+      say('cmd is ready. Run the script, or type a command below.', 'note');
+    }, (e) => { state.textContent = 'Failed'; say(String(e && e.message || e), 'err'); });
+  }
 </script>
 </body>
 </html>
