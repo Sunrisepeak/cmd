@@ -20,8 +20,9 @@ sources     = ["*.c", "!cmain.c"]
 files = ["mcpp/cmd.rc"]
 
 # build.mcpp states the Emscripten link and the web page (mcpp.dist.web).
+# 0.20.0 is the version openkal-platform 0.28.0 builds with; one build holds one.
 [build-dependencies.mcpp]
-plugins = { version = "0.21.0", features = ["dist-web"], host-module = true }
+plugins = { version = "0.20.0", features = ["dist-web"], host-module = true }
 
 # Target names carry the exact CMake output names; build.mcpp suppresses
 # mcpp's host-dependent executable suffix.
