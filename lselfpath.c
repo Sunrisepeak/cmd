@@ -33,12 +33,12 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#if defined(__FreeBSD__)
+#if defined(__FreeBSD__) && !defined(CMD_LIBC_MUSL)
 #include <sys/types.h>
 #include <sys/sysctl.h>
 #endif
 
-#if defined(__APPLE__)
+#if defined(__APPLE__) && !defined(CMD_LIBC_MUSL)
 #include <mach-o/dyld.h>
 #endif
 
@@ -119,7 +119,7 @@ const char *libcmd_get_self_path(void)
     }
 
     /* 2. FreeBSD: sysctl(KERN_PROC_PATHNAME) */
-#if defined(__FreeBSD__)
+#if defined(__FreeBSD__) && !defined(CMD_LIBC_MUSL)
     {
         int mib[4];
         size_t len;
@@ -135,7 +135,7 @@ const char *libcmd_get_self_path(void)
 #endif
 
     /* 3. Darwin: _NSGetExecutablePath */
-#if defined(__APPLE__)
+#if defined(__APPLE__) && !defined(CMD_LIBC_MUSL)
     {
         uint32_t len = (uint32_t)sizeof(buf);
         if (_NSGetExecutablePath(buf, &len) == 0)

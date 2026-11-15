@@ -120,9 +120,17 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/ioctl.h>
+#if defined(__DJGPP__)
+#include <sys/time.h>
+#else
 #include <sys/select.h>
+#endif
 #include <unistd.h>
 #include "glinenoise.h"
+
+#ifndef EWOULDBLOCK
+#define EWOULDBLOCK EAGAIN
+#endif
 
 /* C89 has no <stdint.h>.  A Unicode code point fits in 21 bits; C89
  * guarantees unsigned long is at least 32 bits wide on every target,

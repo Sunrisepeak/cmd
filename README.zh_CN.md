@@ -170,9 +170,184 @@ msbuild cmd.sln /p:Configuration=Release
 
 #### mcpp
 
+[mcpp](https://github.com/mcpp-community/mcpp) 为本机构建 `cmd.exe` 与 `COMMAND.COM`，
+也可以在同一台机器上交叉构建下表中的各个目标。mcpp 可用
+[xlings](https://github.com/openxlings/xlings) 安装（`xlings install mcpp`），
+每个目标的工具链在首次使用时自动获取。
+
 ```sh
 mcpp build --release
 ```
+
+openkal 映像（`.oke`）每个架构一个文件，可在任何带有 `okrun` 的系统上运行
+（Linux、Windows、macOS、FreeBSD、UEFI）：
+
+```sh
+mcpp build --release --target x86_64-openkal
+mcpp run --target x86_64-openkal -- /c ver
+mcpp pack --target openkal --all-programs --mode self-contained
+```
+
+<details>
+<summary>目标与构建命令</summary>
+
+“运行”表示一个包含 `SETLOCAL`、`GOTO`、`CALL`、`FOR`、文件命令与 `SET /A`
+的批处理脚本输出与 Linux x86_64 相同；“启动”表示解释器能启动并退出；“构建”表示
+没有可用的运行器。目标有运行器时，`mcpp run --target <目标>` 经该运行器启动程序。
+测量所用版本为 mcpp 2026.11.15.1。
+
+<table>
+<tr><th>平台</th><th>目标</th><th>验证</th><th>构建命令</th></tr>
+<tr><td>Linux x86_64 (glibc)</td><td><code>x86_64-linux-gnu</code></td><td>运行</td><td>
+
+```sh
+mcpp build --release --target x86_64-linux-gnu
+```
+
+</td></tr>
+<tr><td>Linux x86_64 (static, musl)</td><td><code>x86_64-linux-musl</code></td><td>运行</td><td>
+
+```sh
+mcpp build --release --target x86_64-linux-musl
+```
+
+</td></tr>
+<tr><td>Linux aarch64 (glibc)</td><td><code>aarch64-linux-gnu</code></td><td>运行 (qemu-user)</td><td>
+
+```sh
+mcpp build --release --target aarch64-linux-gnu
+```
+
+</td></tr>
+<tr><td>Linux aarch64 (static, musl)</td><td><code>aarch64-linux-musl</code></td><td>运行 (qemu-user)</td><td>
+
+```sh
+mcpp build --release --target aarch64-linux-musl
+```
+
+</td></tr>
+<tr><td>Linux i686 (static, musl)</td><td><code>i686-linux-musl</code></td><td>运行</td><td>
+
+```sh
+mcpp build --release --target i686-linux-musl
+```
+
+</td></tr>
+<tr><td>Windows x86_64 (MinGW)</td><td><code>x86_64-windows-gnu</code></td><td>运行 (Wine)</td><td>
+
+```sh
+mcpp build --release --target x86_64-windows-gnu
+```
+
+</td></tr>
+<tr><td>Windows x86_64 (openkal musl)</td><td><code>x86_64-windows-musl</code></td><td>运行 (Wine)</td><td>
+
+```sh
+mcpp build --release --target x86_64-windows-musl
+```
+
+</td></tr>
+<tr><td>Windows aarch64 (MinGW)</td><td><code>aarch64-windows-gnu</code></td><td>构建</td><td>
+
+```sh
+mcpp build --release --target aarch64-windows-gnu
+```
+
+</td></tr>
+<tr><td>macOS x86_64 (openkal musl)</td><td><code>x86_64-macos-musl</code></td><td>构建（调试版；发布版链接时缺 openkal-macos 的 <code>__bzero</code>）</td><td>
+
+```sh
+mcpp build --target x86_64-macos-musl
+```
+
+</td></tr>
+<tr><td>macOS aarch64 (openkal musl)</td><td><code>aarch64-macos-musl</code></td><td>构建</td><td>
+
+```sh
+mcpp build --release --target aarch64-macos-musl
+```
+
+</td></tr>
+<tr><td>FreeBSD x86_64 (openkal musl)</td><td><code>x86_64-freebsd</code></td><td>运行 (FreeBSD 14.5)</td><td>
+
+```sh
+mcpp build --release --target x86_64-freebsd
+```
+
+</td></tr>
+<tr><td>FreeBSD aarch64 (openkal musl)</td><td><code>aarch64-freebsd</code></td><td>构建</td><td>
+
+```sh
+mcpp build --release --target aarch64-freebsd
+```
+
+</td></tr>
+<tr><td>Android x86_64</td><td><code>x86_64-linux-android</code></td><td>构建</td><td>
+
+```sh
+mcpp build --release --target x86_64-linux-android
+```
+
+</td></tr>
+<tr><td>Android aarch64</td><td><code>aarch64-linux-android</code></td><td>构建</td><td>
+
+```sh
+mcpp build --release --target aarch64-linux-android
+```
+
+</td></tr>
+<tr><td>WebAssembly (Node.js)</td><td><code>wasm32-emscripten</code></td><td>运行 (node)</td><td>
+
+```sh
+mcpp build --release --target wasm32-emscripten
+```
+
+</td></tr>
+<tr><td>openkal image x86_64 (<code>.oke</code>)</td><td><code>x86_64-openkal</code></td><td>运行 (okrun: Linux, FreeBSD)</td><td>
+
+```sh
+mcpp build --release --target x86_64-openkal
+```
+
+</td></tr>
+<tr><td>openkal image aarch64 (<code>.oke</code>)</td><td><code>aarch64-openkal</code></td><td>运行 (okrun under qemu-user)</td><td>
+
+```sh
+mcpp build --release --target aarch64-openkal
+```
+
+</td></tr>
+<tr><td>openkal image i386 (<code>.oke</code>)</td><td><code>i686-openkal</code></td><td>构建</td><td>
+
+```sh
+mcpp build --release --target i686-openkal
+```
+
+</td></tr>
+<tr><td>UEFI x86_64 (<code>.efi</code>)</td><td><code>x86_64-uefi</code></td><td>启动 (QEMU + OVMF)</td><td>
+
+```sh
+mcpp build --release --target x86_64-uefi
+```
+
+</td></tr>
+<tr><td>MS-DOS 32-bit (DJGPP)</td><td><code>i586-dos-djgpp</code></td><td>运行 (DOSBox)</td><td>
+
+```sh
+mcpp build --release --target i586-dos-djgpp
+```
+
+</td></tr>
+<tr><td>MS-DOS 32-bit (openkal, experimental)</td><td><code>i686-dos-musl</code></td><td>启动 (DOSBox)</td><td>
+
+```sh
+mcpp build --release --target i686-dos-musl
+```
+
+</td></tr>
+</table>
+
+</details>
 
 #### Meson
 
