@@ -166,176 +166,167 @@ msbuild cmd.sln /p:Configuration=Release
 
 #### mcpp
 
-[mcpp](https://github.com/mcpp-community/mcpp) builds `cmd.exe` and `COMMAND.COM`
-for the host, and cross-builds them for the targets below from one machine.
-It installs with [xlings](https://github.com/openxlings/xlings) (`xlings install mcpp`)
-and fetches each target's toolchain on first use.
+mcpp builds for the host, or cross-builds for any target listed below.
 
 ```sh
 mcpp build --release
 ```
 
-An openkal image (`.oke`) is one file per architecture that runs on every
-system with an `okrun` (Linux, Windows, macOS, FreeBSD, UEFI):
+An openkal image (`.oke`) runs on every system that has `okrun`:
 
 ```sh
 mcpp build --release --target x86_64-openkal
 mcpp run --target x86_64-openkal -- /c ver
-mcpp pack --target openkal --all-programs --mode self-contained
 ```
 
 <details>
-<summary>Targets and build commands</summary>
+<summary>Targets</summary>
 
-"runs" means a batch script of `SETLOCAL`, `GOTO`, `CALL`, `FOR`, file
-commands and `SET /A` gives the same output as on Linux x86_64; "starts" means
-the interpreter starts and exits; "builds" means no runner was available.
-`mcpp run --target <target>` starts the program through the target's runner
-where one exists. Measured with mcpp 2026.11.15.1.
+**runs**: a test batch script gives the same output as on Linux x86_64; **starts**: the interpreter starts and exits; **builds**: not run.
 
 <table>
-<tr><th>Platform</th><th>Target</th><th>Verified</th><th>Build command</th></tr>
-<tr><td>Linux x86_64 (glibc)</td><td><code>x86_64-linux-gnu</code></td><td>runs</td><td>
+<tr><th>Target</th><th>Verified</th><th>Build command</th></tr>
+<tr><td>Linux x86_64 (glibc)<br><code>x86_64-linux-gnu</code></td><td>runs</td><td>
 
 ```sh
 mcpp build --release --target x86_64-linux-gnu
 ```
 
 </td></tr>
-<tr><td>Linux x86_64 (static, musl)</td><td><code>x86_64-linux-musl</code></td><td>runs</td><td>
+<tr><td>Linux x86_64 (musl, static)<br><code>x86_64-linux-musl</code></td><td>runs</td><td>
 
 ```sh
 mcpp build --release --target x86_64-linux-musl
 ```
 
 </td></tr>
-<tr><td>Linux aarch64 (glibc)</td><td><code>aarch64-linux-gnu</code></td><td>runs (qemu-user)</td><td>
+<tr><td>Linux aarch64 (glibc)<br><code>aarch64-linux-gnu</code></td><td>runs</td><td>
 
 ```sh
 mcpp build --release --target aarch64-linux-gnu
 ```
 
 </td></tr>
-<tr><td>Linux aarch64 (static, musl)</td><td><code>aarch64-linux-musl</code></td><td>runs (qemu-user)</td><td>
+<tr><td>Linux aarch64 (musl, static)<br><code>aarch64-linux-musl</code></td><td>runs</td><td>
 
 ```sh
 mcpp build --release --target aarch64-linux-musl
 ```
 
 </td></tr>
-<tr><td>Linux i686 (static, musl)</td><td><code>i686-linux-musl</code></td><td>runs</td><td>
+<tr><td>Linux i686 (musl, static)<br><code>i686-linux-musl</code></td><td>runs</td><td>
 
 ```sh
 mcpp build --release --target i686-linux-musl
 ```
 
 </td></tr>
-<tr><td>Windows x86_64 (MinGW)</td><td><code>x86_64-windows-gnu</code></td><td>runs (Wine)</td><td>
+<tr><td>Windows x86_64 (MinGW)<br><code>x86_64-windows-gnu</code></td><td>runs</td><td>
 
 ```sh
 mcpp build --release --target x86_64-windows-gnu
 ```
 
 </td></tr>
-<tr><td>Windows x86_64 (openkal musl)</td><td><code>x86_64-windows-musl</code></td><td>runs (Wine)</td><td>
+<tr><td>Windows x86_64 (musl)<br><code>x86_64-windows-musl</code></td><td>runs</td><td>
 
 ```sh
 mcpp build --release --target x86_64-windows-musl
 ```
 
 </td></tr>
-<tr><td>Windows aarch64 (MinGW)</td><td><code>aarch64-windows-gnu</code></td><td>builds</td><td>
+<tr><td>Windows aarch64 (MinGW)<br><code>aarch64-windows-gnu</code></td><td>builds</td><td>
 
 ```sh
 mcpp build --release --target aarch64-windows-gnu
 ```
 
 </td></tr>
-<tr><td>macOS x86_64 (openkal musl)</td><td><code>x86_64-macos-musl</code></td><td>builds (debug; a release build stops at an undefined <code>__bzero</code> in openkal-macos)</td><td>
+<tr><td>macOS x86_64<br><code>x86_64-macos-musl</code></td><td>builds ¹</td><td>
 
 ```sh
 mcpp build --target x86_64-macos-musl
 ```
 
 </td></tr>
-<tr><td>macOS aarch64 (openkal musl)</td><td><code>aarch64-macos-musl</code></td><td>builds</td><td>
+<tr><td>macOS aarch64<br><code>aarch64-macos-musl</code></td><td>builds</td><td>
 
 ```sh
 mcpp build --release --target aarch64-macos-musl
 ```
 
 </td></tr>
-<tr><td>FreeBSD x86_64 (openkal musl)</td><td><code>x86_64-freebsd</code></td><td>runs (FreeBSD 14.5)</td><td>
+<tr><td>FreeBSD x86_64<br><code>x86_64-freebsd</code></td><td>runs</td><td>
 
 ```sh
 mcpp build --release --target x86_64-freebsd
 ```
 
 </td></tr>
-<tr><td>FreeBSD aarch64 (openkal musl)</td><td><code>aarch64-freebsd</code></td><td>builds</td><td>
+<tr><td>FreeBSD aarch64<br><code>aarch64-freebsd</code></td><td>builds</td><td>
 
 ```sh
 mcpp build --release --target aarch64-freebsd
 ```
 
 </td></tr>
-<tr><td>Android x86_64</td><td><code>x86_64-linux-android</code></td><td>builds</td><td>
+<tr><td>Android x86_64<br><code>x86_64-linux-android</code></td><td>builds</td><td>
 
 ```sh
 mcpp build --release --target x86_64-linux-android
 ```
 
 </td></tr>
-<tr><td>Android aarch64</td><td><code>aarch64-linux-android</code></td><td>builds</td><td>
+<tr><td>Android aarch64<br><code>aarch64-linux-android</code></td><td>builds</td><td>
 
 ```sh
 mcpp build --release --target aarch64-linux-android
 ```
 
 </td></tr>
-<tr><td>WebAssembly (Node.js)</td><td><code>wasm32-emscripten</code></td><td>runs (node)</td><td>
+<tr><td>WebAssembly (Node.js)<br><code>wasm32-emscripten</code></td><td>runs</td><td>
 
 ```sh
 mcpp build --release --target wasm32-emscripten
 ```
 
 </td></tr>
-<tr><td>openkal image x86_64 (<code>.oke</code>)</td><td><code>x86_64-openkal</code></td><td>runs (okrun: Linux, FreeBSD)</td><td>
+<tr><td>openkal image x86_64<br><code>x86_64-openkal</code></td><td>runs</td><td>
 
 ```sh
 mcpp build --release --target x86_64-openkal
 ```
 
 </td></tr>
-<tr><td>openkal image aarch64 (<code>.oke</code>)</td><td><code>aarch64-openkal</code></td><td>runs (okrun under qemu-user)</td><td>
+<tr><td>openkal image aarch64<br><code>aarch64-openkal</code></td><td>runs</td><td>
 
 ```sh
 mcpp build --release --target aarch64-openkal
 ```
 
 </td></tr>
-<tr><td>openkal image i386 (<code>.oke</code>)</td><td><code>i686-openkal</code></td><td>builds</td><td>
+<tr><td>openkal image i386<br><code>i686-openkal</code></td><td>builds</td><td>
 
 ```sh
 mcpp build --release --target i686-openkal
 ```
 
 </td></tr>
-<tr><td>UEFI x86_64 (<code>.efi</code>)</td><td><code>x86_64-uefi</code></td><td>starts (QEMU + OVMF)</td><td>
+<tr><td>UEFI x86_64<br><code>x86_64-uefi</code></td><td>starts</td><td>
 
 ```sh
 mcpp build --release --target x86_64-uefi
 ```
 
 </td></tr>
-<tr><td>MS-DOS 32-bit (DJGPP)</td><td><code>i586-dos-djgpp</code></td><td>runs (DOSBox)</td><td>
+<tr><td>MS-DOS (DJGPP)<br><code>i586-dos-djgpp</code></td><td>runs</td><td>
 
 ```sh
 mcpp build --release --target i586-dos-djgpp
 ```
 
 </td></tr>
-<tr><td>MS-DOS 32-bit (openkal, experimental)</td><td><code>i686-dos-musl</code></td><td>starts (DOSBox)</td><td>
+<tr><td>MS-DOS (openkal, experimental)<br><code>i686-dos-musl</code></td><td>starts</td><td>
 
 ```sh
 mcpp build --release --target i686-dos-musl
@@ -343,6 +334,8 @@ mcpp build --release --target i686-dos-musl
 
 </td></tr>
 </table>
+
+¹ Debug build only for now (`mcpp build --target x86_64-macos-musl`).
 
 </details>
 
