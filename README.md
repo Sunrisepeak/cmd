@@ -179,10 +179,17 @@ mcpp build --release --target x86_64-openkal
 mcpp run --target x86_64-openkal -- /c ver
 ```
 
+In a browser, the web profile and mcpp's `dist-web` plugin make a page
+([try it](https://sunrisepeak.github.io/cmd/)):
+
+```sh
+mcpp pack cmd.exe --profile web --target wasm32-emscripten --pkg-format web
+```
+
 <details>
 <summary>More targets: Linux, Windows, macOS, FreeBSD, Android, WebAssembly, openkal images, UEFI and DOS</summary>
 
-**runs**: a test batch script gives the same output as on Linux x86_64; **starts**: the interpreter starts and exits; **builds**: not run.
+**runs**: a test batch script gives the same output as on Linux x86_64 (checked by `.github/workflows/mcpp.yml`); **starts**: the interpreter starts and exits; **builds**: not run.
 
 <table>
 <tr><th>Target</th><th>Verified</th><th>Build command</th></tr>
@@ -235,24 +242,31 @@ mcpp build --release --target x86_64-windows-musl
 ```
 
 </td></tr>
-<tr><td>Windows aarch64 (MinGW)<br><code>aarch64-windows-gnu</code></td><td>builds</td><td>
+<tr><td>Windows aarch64 (MinGW)<br><code>aarch64-windows-gnu</code></td><td>runs</td><td>
 
 ```sh
 mcpp build --release --target aarch64-windows-gnu
 ```
 
 </td></tr>
-<tr><td>macOS x86_64<br><code>x86_64-macos-musl</code></td><td>builds ¹</td><td>
+<tr><td>macOS x86_64<br><code>x86_64-macos-musl</code></td><td>runs ¹</td><td>
 
 ```sh
 mcpp build --target x86_64-macos-musl
 ```
 
 </td></tr>
-<tr><td>macOS aarch64<br><code>aarch64-macos-musl</code></td><td>builds</td><td>
+<tr><td>macOS aarch64<br><code>aarch64-macos-musl</code></td><td>runs</td><td>
 
 ```sh
 mcpp build --release --target aarch64-macos-musl
+```
+
+</td></tr>
+<tr><td>macOS aarch64 (Apple SDK, on a Mac)<br><code>aarch64-macos</code></td><td>runs</td><td>
+
+```sh
+mcpp build --release --target aarch64-macos
 ```
 
 </td></tr>
@@ -263,14 +277,14 @@ mcpp build --release --target x86_64-freebsd
 ```
 
 </td></tr>
-<tr><td>FreeBSD aarch64<br><code>aarch64-freebsd</code></td><td>builds</td><td>
+<tr><td>FreeBSD aarch64<br><code>aarch64-freebsd</code></td><td>runs</td><td>
 
 ```sh
 mcpp build --release --target aarch64-freebsd
 ```
 
 </td></tr>
-<tr><td>Android x86_64<br><code>x86_64-linux-android</code></td><td>builds</td><td>
+<tr><td>Android x86_64<br><code>x86_64-linux-android</code></td><td>runs</td><td>
 
 ```sh
 mcpp build --release --target x86_64-linux-android

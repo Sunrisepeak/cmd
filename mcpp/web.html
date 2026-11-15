@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{title}}</title>
+<style>
+  body { font: 14px/1.4 system-ui, sans-serif; margin: 0 auto; max-width: 960px; padding: 1rem; background: #111; color: #ddd; }
+  h1 { font-size: 1.2rem; }
+  textarea, input, pre { font: 13px/1.35 ui-monospace, Consolas, monospace; background: #000; color: #ccc; border: 1px solid #444; box-sizing: border-box; width: 100%; }
+  textarea { height: 14rem; padding: .5rem; }
+  input { padding: .4rem; }
+  pre { min-height: 12rem; padding: .5rem; white-space: pre-wrap; }
+  button { margin: .4rem .4rem .4rem 0; padding: .3rem .8rem; }
+  .err { color: #e88; }
+  small { color: #888; }
+</style>
+</head>
+<body>
+<h1>cmd for Unix, compiled to WebAssembly</h1>
+<p><small>Each run starts the interpreter with <code>/c</code> in a fresh module; the files under
+<code>\work</code> carry over from run to run, environment variables do not. The page has no
+interactive prompt: a browser cannot block while it waits for a key.</small></p>
+<textarea id="script" spellcheck="false">@echo off
+setlocal enabledelayedexpansion
+set N=0
+:loop
+set /a N+=1 >nul
+if !N! lss 5 goto loop
+echo counted to !N!
+for %%f in (alpha beta gamma) do echo item %%f
+md demo 2>nul
+echo hello from a file> demo\note.txt
+type demo\note.txt
+dir /b demo
+ver
+</textarea>
+<button id="run-script">Run the script</button>
+<input id="line" placeholder="a command, e.g.  dir /b  or  set /a 6*7" autocomplete="off">
+<pre id="out"></pre>
+<script src="{{name}}.js"></script>
+<script>
+  const view = document.getElementById('out');
+  let saved = { dirs: [], files: {} };           // \work, carried between runs
+
+  function snapshot(FS, root) {
+    const dirs = [], files = {};
+    (function walk(dir) {
+      for (const name of FS.readdir(dir)) {
+        if (name === '.' || name === '..') continue;
+        const p = dir + '/' + name, st = FS.stat(p);
+        if (FS.isDir(st.mode)) { dirs.push(p); walk(p); } else files[p] = FS.readFile(p);
+      }
+    })(root);
+    return { dirs, files };
+  }
+
+  // Runs cmd.exe with argv in a new module over \work; resolves {status, lines}.
+  window.runCmd = async function (argv, extra) {
+    const lines = [];
+    const mod = await createCmd({
+      print: (s) => lines.push(s.replace(/\x1b\[[0-9;]*m/g, '')),
+      printErr: (s) => lines.push('\u0000' + s.replace(/\x1b\[[0-9;]*m/g, '')),
+    });
+    const FS = mod.FS;
+    FS.mkdir('/work');
+    for (const d of saved.dirs) FS.mkdir(d);
+    for (const [p, data] of Object.entries(saved.files)) FS.writeFile(p, data);
+    for (const [p, text] of Object.entries(extra || {})) FS.writeFile('/work/' + p, text);
+    FS.chdir('/work');
+    let status;
+    try { status = mod.callMain(argv); } catch (e) { status = e && e.status !== undefined ? e.status : String(e); }
+    saved = snapshot(FS, '/work');
+    return { status, lines };
+  };
+
+  function show(cmdline, result) {
+    const head = document.createElement('div');
+    head.textContent = '> ' + cmdline;
+    view.appendChild(head);
+    for (const l of result.lines) {
+      const div = document.createElement('div');
+      if (l.startsWith('\u0000')) { div.className = 'err'; div.textContent = l.slice(1); }
+      else div.textContent = l;
+      view.appendChild(div);
+    }
+    view.scrollTop = view.scrollHeight;
+  }
+
+  document.getElementById('run-script').onclick = async () => {
+    const text = document.getElementById('script').value.replace(/\r?\n/g, '\r\n');
+    show('cmd /c script.bat', await runCmd(['/c', 'script.bat'], { 'script.bat': text }));
+  };
+  document.getElementById('line').addEventListener('keydown', async (e) => {
+    if (e.key !== 'Enter' || !e.target.value.trim()) return;
+    const line = e.target.value; e.target.value = '';
+    show(line, await runCmd(['/c', line]));
+  });
+  window.cmdReady = true;
+</script>
+</body>
+</html>

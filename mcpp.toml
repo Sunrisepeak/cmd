@@ -19,6 +19,10 @@ sources     = ["*.c", "!cmain.c"]
 [resources]
 files = ["mcpp/cmd.rc"]
 
+# build.mcpp states the Emscripten link and the web page (mcpp.dist.web).
+[build-dependencies.mcpp]
+plugins = { version = "0.21.0", features = ["dist-web"], host-module = true }
+
 # Target names carry the exact CMake output names; build.mcpp suppresses
 # mcpp's host-dependent executable suffix.
 [targets."cmd.exe"]
@@ -42,11 +46,11 @@ i586-dos-djgpp.platform  = "djgpp-platform@0.1.0"
 [target.'cfg(c-abi = "musl")'.build]
 defines = ["CMD_LIBC_MUSL=1"]
 
-# Emscripten: host files through node, exit when done, setjmp/longjmp, a larger stack.
-[target.wasm32-emscripten.build]
-cflags  = ["-sSUPPORT_LONGJMP=wasm"]
-ldflags = ["-sNODERAWFS=1", "-sEXIT_RUNTIME=1", "-sSUPPORT_LONGJMP=wasm", "-sSTACK_SIZE=1048576"]
-
 # DJGPP has no setpriority(); the System V shims use nice().
 [target.i586-dos-djgpp.build]
 defines = ["LIBCMD_SYSV=1"]
+
+
+# The browser build of wasm32-emscripten; build.mcpp states its link.
+[profile.web]
+opt = 2

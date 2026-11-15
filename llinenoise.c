@@ -595,6 +595,11 @@ void linenoiseSetMultiLine(int ml) {
 /* Return true if the terminal name is in the list of terminals we know are
  * not able to understand basic escape sequences. */
 static int isUnsupportedTerm(void) {
+#if defined(__EMSCRIPTEN__)
+    /* Emscripten accepts tcsetattr() but has no raw mode: the terminal stays
+     * line-buffered and turns Enter into '\n', so lines are read whole. */
+    return 1;
+#else
     char *term = getenv("TERM");
     int j;
 
@@ -602,6 +607,7 @@ static int isUnsupportedTerm(void) {
     for (j = 0; unsupported_term[j]; j++)
         if (!libcmd_strcasecmp(term,unsupported_term[j])) return 1;
     return 0;
+#endif
 }
 
 /* Raw mode: 1960 magic shit. */

@@ -11,6 +11,9 @@ on:
   pull_request:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 env:
   MCPP_VERSION: 2026.11.15.1
   XLINGS_VERSION: v2026.10.26.1
@@ -78,6 +81,76 @@ jobs:
             echo "::endgroup::"
           done
           [ -z "$failed" ] || { echo "::error::failed:$failed"; exit 1; }
+
+      - name: Lines typed at the prompt (a terminal)
+        if: runner.os == 'Linux'
+        run: |
+          set -e
+          for t in ${{ matrix.targets }}; do
+            case $t in
+              *-linux-gnu) python3 .github/mcpp/prompt.py "$(find "target/$t" -path '*bin/cmd.exe' -type f | head -1)" ;;
+              wasm32-emscripten) python3 .github/mcpp/prompt.py node "$(find "target/$t" -path '*bin/cmd.exe.js' -type f | head -1)" ;;
+              *) continue ;;
+            esac
+            echo "$t: the prompt runs typed lines" >> "$GITHUB_STEP_SUMMARY"
+          done
+
+  # The browser build, packed as a web directory by mcpp.dist.web and run in
+  # Chrome; on main it is published to GitHub Pages.
+  web:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install mcpp
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/openxlings/xlings/main/tools/other/quick_install.sh | bash -s "$XLINGS_VERSION"
+          export PATH="$HOME/.xlings/subos/current/bin:$PATH"
+          echo "$HOME/.xlings/subos/current/bin" >> "$GITHUB_PATH"
+          for attempt in 1 2 3 4 5; do
+            xlings update > /dev/null 2>&1 || true
+            xlings install "mcpp@$MCPP_VERSION" -y -g && break
+            [ "$attempt" = 5 ] && { echo "::error::mcpp could not be installed"; exit 1; }
+            sleep 60
+          done
+          mcpp self config --mirror GLOBAL
+
+      - name: Pack the web directory
+        run: |
+          set -euo pipefail
+          mcpp pack cmd.exe --profile web --target wasm32-emscripten --pkg-format web
+          dir=$(find target -type d -name web -path '*/out/*' | head -1)
+          mkdir -p site && cp "$dir"/* site/ && ls -l site
+
+      - name: Run in Chrome
+        run: |
+          set -euo pipefail
+          (cd "$RUNNER_TEMP" && npm init -y > /dev/null && npm install --silent playwright-core)
+          cp .github/mcpp/web/test.mjs "$RUNNER_TEMP/"
+          (cd site && python3 -m http.server 8000 --bind 127.0.0.1 > /dev/null 2>&1 &)
+          sleep 1
+          node "$RUNNER_TEMP/test.mjs" "$(command -v google-chrome)" http://127.0.0.1:8000/index.html .github/mcpp/test.bat > web.txt
+          sh .github/mcpp/check.sh web.txt
+          echo "wasm32-emscripten in Chrome: runs" >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  pages:
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    needs: web
+    runs-on: ubuntu-24.04
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4
 
   # Built on Linux x86_64; run by another machine, an emulator, or not at all.
   cross:

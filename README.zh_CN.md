@@ -183,10 +183,17 @@ mcpp build --release --target x86_64-openkal
 mcpp run --target x86_64-openkal -- /c ver
 ```
 
+在浏览器中：web 配置与 mcpp 的 `dist-web` 插件生成一个网页
+（[在线体验](https://sunrisepeak.github.io/cmd/)）：
+
+```sh
+mcpp pack cmd.exe --profile web --target wasm32-emscripten --pkg-format web
+```
+
 <details>
 <summary>更多目标：Linux、Windows、macOS、FreeBSD、Android、WebAssembly、openkal 映像、UEFI 与 DOS</summary>
 
-**运行**：测试批处理输出与 Linux x86_64 相同；**启动**：解释器能启动并退出；**构建**：未运行。
+**运行**：测试批处理输出与 Linux x86_64 相同（由 `.github/workflows/mcpp.yml` 检查）；**启动**：解释器能启动并退出；**构建**：未运行。
 
 <table>
 <tr><th>目标</th><th>验证</th><th>构建命令</th></tr>
@@ -239,24 +246,31 @@ mcpp build --release --target x86_64-windows-musl
 ```
 
 </td></tr>
-<tr><td>Windows aarch64 (MinGW)<br><code>aarch64-windows-gnu</code></td><td>构建</td><td>
+<tr><td>Windows aarch64 (MinGW)<br><code>aarch64-windows-gnu</code></td><td>运行</td><td>
 
 ```sh
 mcpp build --release --target aarch64-windows-gnu
 ```
 
 </td></tr>
-<tr><td>macOS x86_64<br><code>x86_64-macos-musl</code></td><td>构建 ¹</td><td>
+<tr><td>macOS x86_64<br><code>x86_64-macos-musl</code></td><td>运行 ¹</td><td>
 
 ```sh
 mcpp build --target x86_64-macos-musl
 ```
 
 </td></tr>
-<tr><td>macOS aarch64<br><code>aarch64-macos-musl</code></td><td>构建</td><td>
+<tr><td>macOS aarch64<br><code>aarch64-macos-musl</code></td><td>运行</td><td>
 
 ```sh
 mcpp build --release --target aarch64-macos-musl
+```
+
+</td></tr>
+<tr><td>macOS aarch64（Apple SDK，在 Mac 上）<br><code>aarch64-macos</code></td><td>运行</td><td>
+
+```sh
+mcpp build --release --target aarch64-macos
 ```
 
 </td></tr>
@@ -267,14 +281,14 @@ mcpp build --release --target x86_64-freebsd
 ```
 
 </td></tr>
-<tr><td>FreeBSD aarch64<br><code>aarch64-freebsd</code></td><td>构建</td><td>
+<tr><td>FreeBSD aarch64<br><code>aarch64-freebsd</code></td><td>运行</td><td>
 
 ```sh
 mcpp build --release --target aarch64-freebsd
 ```
 
 </td></tr>
-<tr><td>Android x86_64<br><code>x86_64-linux-android</code></td><td>构建</td><td>
+<tr><td>Android x86_64<br><code>x86_64-linux-android</code></td><td>运行</td><td>
 
 ```sh
 mcpp build --release --target x86_64-linux-android
