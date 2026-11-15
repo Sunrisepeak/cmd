@@ -254,12 +254,28 @@ jobs:
           exe=$(ls cmd.exe* | head -1)
           file "$exe" || true
           "./$exe" /c ver < /dev/null
+      # Each command alone, then the script traced, each with a time limit,
+      # to find where the run stops.
+      - name: Probe
+        working-directory: out
+        timeout-minutes: 5
+        run: |
+          exe=./$(ls cmd.exe* | head -1)
+          for c in "set /a N=1" "if 1 lss 3 echo lt" "for %f in (a b) do echo %f" \
+                   "md okp" "echo x> okp\f1.txt" "copy okp\f1.txt okp\f2.txt" \
+                   "ren okp\f2.txt f3.txt" "type okp\f3.txt" "dir /b okp" \
+                   "del okp\f1.txt okp\f3.txt" "rd okp"; do
+            echo "== $c"
+            timeout 20 "$exe" /c "$c" < /dev/null; echo "-- status $?"
+          done
+          sed 's/^@echo off/@echo on/' test.bat > trace.bat
+          timeout 30 "$exe" /c trace.bat < /dev/null; echo "-- status $?"
       - name: Run
         working-directory: out
         timeout-minutes: 5
         run: |
           exe=$(ls cmd.exe* | head -1)
-          "./$exe" /c test.bat < /dev/null > run.txt
+          timeout 60 "./$exe" /c test.bat < /dev/null > run.txt || { cat run.txt; exit 1; }
           sh check.sh run.txt
           echo "aarch64-windows-gnu: runs" >> "$GITHUB_STEP_SUMMARY"
 
