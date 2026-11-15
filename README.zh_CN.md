@@ -246,7 +246,7 @@ mcpp build --release --target x86_64-windows-musl
 ```
 
 </td></tr>
-<tr><td>Windows aarch64 (MinGW)<br><code>aarch64-windows-gnu</code></td><td>启动</td><td>
+<tr><td>Windows aarch64 (MinGW)<br><code>aarch64-windows-gnu</code></td><td>运行</td><td>
 
 ```sh
 mcpp build --release --target aarch64-windows-gnu
