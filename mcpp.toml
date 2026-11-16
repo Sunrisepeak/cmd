@@ -2,13 +2,12 @@
 name        = "cmd"
 version     = "0.1.0"
 description = "A faithful reimplementation of the Windows cmd.exe command interpreter for Unix."
-mcpp        = ">=2026.11.16.1"
+mcpp        = ">=2026.11.17.1"
 
 # Both personalities are built from the same C sources.  COMMAND.COM is the
-# classic MS-DOS variant, which additionally executes AUTOEXEC.BAT.
-# mcpp compiles shared sources once, so the entry file is the only place a
-# per-target define can take effect; cmain.c is the cmd.exe entry below and
-# mcpp/cmain_command.c is the COMMAND.COM entry.
+# classic MS-DOS variant, which additionally executes AUTOEXEC.BAT: the same
+# entry, cmain.c, with its own define (each target compiles its entry with its
+# own defines).
 [build]
 c_standard  = "gnu11"
 include_dirs = ["."]
@@ -20,9 +19,9 @@ sources     = ["*.c", "!cmain.c"]
 files = ["mcpp/cmd.rc"]
 
 # build.mcpp states the Emscripten link and the web page (mcpp.dist.web).
-# 0.20.0 is the version openkal-platform 0.29.0 builds with; one build holds one.
+# 0.22.1 is the version openkal-platform 0.29.1 builds with; one build holds one.
 [build-dependencies.mcpp]
-plugins = { version = "0.20.0", features = ["dist-web"], host-module = true }
+plugins = { version = "0.22.1", features = ["dist-web"], host-module = true }
 
 # Target names carry the exact CMake output names; build.mcpp suppresses
 # mcpp's host-dependent executable suffix.
@@ -32,15 +31,14 @@ main = "cmain.c"
 
 [targets."COMMAND.COM"]
 kind = "bin"
-main = "mcpp/cmain_command.c"
+main = "cmain.c"
 defines = ["ENABLE_AUTOEXEC=1"]
 
-# Targets served by platform packages, beyond mcpp's built-in ones.
+# A row the built-in table does not serve is served by the platform the package
+# index names for it (openkal-platform: i686-linux-musl, i686-openkal,
+# x86_64-uefi, i686-dos-musl; mcpp.platforms: the NetBSD and OpenBSD rows).
+# The index names none for DJGPP's row.
 [target]
-i686-linux-musl.platform = "openkal-platform@0.29.0"
-i686-openkal.platform    = "openkal-platform@0.29.0"
-x86_64-uefi.platform     = "openkal-platform@0.29.0"
-i686-dos-musl.platform   = "openkal-platform@0.29.0"
 i586-dos-djgpp.platform  = "djgpp-platform@0.1.0"
 
 # openkal's musl has neither sysctl nor _NSGetExecutablePath (lselfpath.c).

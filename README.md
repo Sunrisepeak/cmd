@@ -187,7 +187,7 @@ mcpp pack cmd.exe --profile web --target wasm32-emscripten --pkg-format web
 ```
 
 <details>
-<summary>More targets: Linux, Windows, macOS, FreeBSD, Android, WebAssembly, openkal images, UEFI and DOS</summary>
+<summary>More targets: Linux, Windows, macOS, FreeBSD, NetBSD, OpenBSD, Android, WebAssembly, openkal images, UEFI and DOS</summary>
 
 **runs**: a test batch script gives the same output as on Linux x86_64 (checked by `.github/workflows/mcpp.yml`); **starts**: the interpreter starts and exits; **builds**: not run.
 
@@ -284,6 +284,34 @@ mcpp build --release --target aarch64-freebsd
 ```
 
 </td></tr>
+<tr><td>NetBSD x86_64<br><code>x86_64-netbsd</code></td><td>runs</td><td>
+
+```sh
+mcpp build --release --target x86_64-netbsd
+```
+
+</td></tr>
+<tr><td>NetBSD aarch64<br><code>aarch64-netbsd</code></td><td>builds</td><td>
+
+```sh
+mcpp build --release --target aarch64-netbsd
+```
+
+</td></tr>
+<tr><td>OpenBSD x86_64<br><code>x86_64-openbsd</code></td><td>runs</td><td>
+
+```sh
+mcpp build --release --target x86_64-openbsd
+```
+
+</td></tr>
+<tr><td>OpenBSD aarch64<br><code>aarch64-openbsd</code></td><td>builds</td><td>
+
+```sh
+mcpp build --release --target aarch64-openbsd
+```
+
+</td></tr>
 <tr><td>Android x86_64<br><code>x86_64-linux-android</code></td><td>runs</td><td>
 
 ```sh
@@ -340,7 +368,7 @@ mcpp build --release --target i586-dos-djgpp
 ```
 
 </td></tr>
-<tr><td>MS-DOS (openkal, experimental)<br><code>i686-dos-musl</code></td><td>starts ³</td><td>
+<tr><td>MS-DOS (openkal, experimental)<br><code>i686-dos-musl</code></td><td>runs ²</td><td>
 
 ```sh
 mcpp build --release --target i686-dos-musl
@@ -351,13 +379,20 @@ mcpp build --release --target i686-dos-musl
 
 ¹ Debug build only for now (`mcpp build --target x86_64-macos-musl`).
 
-² The script without its part that writes files: the firmware's disk is read-only.
+² The script without its part that writes files: on UEFI a file is not renamed and a listing
+shows names without their extension; under openkal DOS a subdirectory is not listed.
 
-³ openkal-dos's first stack is 64 KiB (mcpplibs/openkal-dos#3); an `IF` in a batch file needs more, and the script ends there.
+The NetBSD and OpenBSD rows, and the openkal rows beyond mcpp's own, come from the platform
+the package index names for them. The FreeBSD, NetBSD, OpenBSD, Android, UEFI and DOS rows run
+in a machine or an emulator that mcpp installs on first use, so their runner is enabled on
+request: `[target.x86_64-uefi] runner = { enabled = true }` in `mcpp.toml` or this machine's
+`config.toml`, or `MCPP_TARGET_X86_64_UEFI_RUNNER_ENABLED=true` for one `mcpp run`. A file the
+program reads is given with the run:
 
-The UEFI and openkal DOS rows run in a machine that mcpp installs on first use, so their runner is
-enabled on request: `[target.x86_64-uefi] runner = { enabled = true }` in `mcpp.toml` or this
-machine's `config.toml`, or `MCPP_TARGET_X86_64_UEFI_RUNNER_ENABLED=true` for one `mcpp run`.
+```sh
+MCPP_TARGET_X86_64_NETBSD_RUNNER_ENABLED=true \
+  mcpp run cmd.exe --release --target x86_64-netbsd --file test.bat -- /c test.bat
+```
 
 </details>
 
