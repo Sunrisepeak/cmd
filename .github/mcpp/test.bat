@@ -9,6 +9,7 @@ echo N=!N!
 call :sub hi there
 echo errorlevel=%errorlevel%
 for %%f in (a b c) do echo item %%f
+rem files: a writable directory (a run on a read-only disk leaves this part out)
 md okt
 echo x> okt\f1.txt
 copy okt\f1.txt okt\f2.txt >nul
@@ -18,6 +19,7 @@ dir /b okt
 del okt\f1.txt okt\f3.txt
 rd okt
 if not exist okt echo okt removed
+rem end of files
 set /a X=6*7
 echo X=%X%
 echo done

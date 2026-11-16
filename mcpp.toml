@@ -2,7 +2,7 @@
 name        = "cmd"
 version     = "0.1.0"
 description = "A faithful reimplementation of the Windows cmd.exe command interpreter for Unix."
-mcpp        = ">=2026.11.7.1"
+mcpp        = ">=2026.11.16.1"
 
 # Both personalities are built from the same C sources.  COMMAND.COM is the
 # classic MS-DOS variant, which additionally executes AUTOEXEC.BAT.
@@ -20,7 +20,7 @@ sources     = ["*.c", "!cmain.c"]
 files = ["mcpp/cmd.rc"]
 
 # build.mcpp states the Emscripten link and the web page (mcpp.dist.web).
-# 0.20.0 is the version openkal-platform 0.28.0 builds with; one build holds one.
+# 0.20.0 is the version openkal-platform 0.29.0 builds with; one build holds one.
 [build-dependencies.mcpp]
 plugins = { version = "0.20.0", features = ["dist-web"], host-module = true }
 
@@ -37,10 +37,10 @@ defines = ["ENABLE_AUTOEXEC=1"]
 
 # Targets served by platform packages, beyond mcpp's built-in ones.
 [target]
-i686-linux-musl.platform = "openkal-platform@0.28.0"
-i686-openkal.platform    = "openkal-platform@0.28.0"
-x86_64-uefi.platform     = "openkal-platform@0.28.0"
-i686-dos-musl.platform   = "openkal-platform@0.28.0"
+i686-linux-musl.platform = "openkal-platform@0.29.0"
+i686-openkal.platform    = "openkal-platform@0.29.0"
+x86_64-uefi.platform     = "openkal-platform@0.29.0"
+i686-dos-musl.platform   = "openkal-platform@0.29.0"
 i586-dos-djgpp.platform  = "djgpp-platform@0.1.0"
 
 # openkal's musl has neither sysctl nor _NSGetExecutablePath (lselfpath.c).

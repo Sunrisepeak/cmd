@@ -323,14 +323,14 @@ mcpp build --release --target aarch64-openkal
 ```
 
 </td></tr>
-<tr><td>openkal image i386<br><code>i686-openkal</code></td><td>构建</td><td>
+<tr><td>openkal image i386<br><code>i686-openkal</code></td><td>运行</td><td>
 
 ```sh
 mcpp build --release --target i686-openkal
 ```
 
 </td></tr>
-<tr><td>UEFI x86_64<br><code>x86_64-uefi</code></td><td>启动</td><td>
+<tr><td>UEFI x86_64<br><code>x86_64-uefi</code></td><td>运行 ²</td><td>
 
 ```sh
 mcpp build --release --target x86_64-uefi
@@ -344,7 +344,7 @@ mcpp build --release --target i586-dos-djgpp
 ```
 
 </td></tr>
-<tr><td>MS-DOS (openkal, experimental)<br><code>i686-dos-musl</code></td><td>启动</td><td>
+<tr><td>MS-DOS (openkal, experimental)<br><code>i686-dos-musl</code></td><td>启动 ³</td><td>
 
 ```sh
 mcpp build --release --target i686-dos-musl
@@ -354,6 +354,14 @@ mcpp build --release --target i686-dos-musl
 </table>
 
 ¹ 目前仅支持调试构建（`mcpp build --target x86_64-macos-musl`）。
+
+² 不含写文件的部分：固件的磁盘为只读。
+
+³ openkal-dos 的初始栈为 64 KiB（mcpplibs/openkal-dos#3）；批处理中的 `IF` 需要更多，脚本在此结束。
+
+UEFI 与 openkal DOS 行在 mcpp 首次使用时安装的虚拟机中运行，因此其运行器需显式启用：在 `mcpp.toml`
+或本机 `config.toml` 中写 `[target.x86_64-uefi] runner = { enabled = true }`，或对单次 `mcpp run`
+设置 `MCPP_TARGET_X86_64_UEFI_RUNNER_ENABLED=true`。
 
 </details>
 

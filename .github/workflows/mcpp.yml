@@ -15,7 +15,7 @@ permissions:
   contents: read
 
 env:
-  MCPP_VERSION: 2026.11.15.1
+  MCPP_VERSION: 2026.11.16.1
   XLINGS_VERSION: v2026.10.26.1
   XLINGS_NON_INTERACTIVE: '1'
   MSYS_NO_PATHCONV: '1'
@@ -173,8 +173,11 @@ jobs:
           - { target: x86_64-linux-android,  check: artifact }
           - { target: aarch64-linux-android, check: build }
           - { target: openkal,               check: artifact }
-          - { target: i686-openkal,          check: build }
-          - { target: x86_64-uefi,           check: start }
+          - { target: i686-openkal,          check: run }
+          - { target: x86_64-uefi,           check: uefi }
+          # Starts only: openkal-dos's first stack is 64 KiB (mcpplibs/openkal-dos#3).
+          # An IF in a batch file needs more (on Linux it runs with 96 KiB and not
+          # with 64 KiB), and under DOS the script ends there with status 0.
           - { target: i686-dos-musl,         check: start }
           - { target: i586-dos-djgpp,        check: dos }
     defaults:
@@ -214,15 +217,59 @@ jobs:
           ls -l out
           echo "${t}: builds" >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Start (UEFI and openkal DOS)
+      # A runner that boots a machine is enabled on request (mcpp 2026.11.16.1);
+      # unenabled, mcpp run refuses with status 2 before installing anything.
+      - name: The machine's runner waits to be enabled
+        if: matrix.check == 'uefi' || matrix.check == 'start'
+        run: |
+          t='${{ matrix.target }}'
+          s=0; mcpp run cmd.exe --release --target "$t" -- /c echo started > refused.txt 2>&1 || s=$?
+          cat refused.txt
+          [ "$s" = 2 ] && grep -q 'runner-not-enabled' refused.txt || { echo "::error::$t: expected a refusal (status 2), got $s"; exit 1; }
+
+      - name: Start (openkal DOS)
         if: matrix.check == 'start'
+        env:
+          MCPP_TARGET_I686_DOS_MUSL_RUNNER_ENABLED: 'true'
         run: |
           set -o pipefail
           t='${{ matrix.target }}'
           mcpp run cmd.exe --release --target "$t" -- /c echo started 2>&1 | tee start.txt
-          # The UEFI runner passes no arguments: the interpreter prints its banner and reads EOF.
-          grep -Eq '^started|Massivehard' start.txt || { echo "::error::$t did not start"; exit 1; }
+          tr -d '\r' < start.txt | grep -qx 'started' || { echo "::error::$t did not start"; exit 1; }
           echo "${t}: starts" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Run test.bat under OVMF
+        if: matrix.check == 'uefi'
+        env:
+          MCPP_TARGET_X86_64_UEFI_RUNNER_ENABLED: 'true'
+        run: |
+          set -euo pipefail
+          # The arguments after `--' reach the application through the UEFI Shell.
+          mcpp run cmd.exe --release --target x86_64-uefi -- /c echo started "two words" 2>&1 | tee start.txt
+          tr -d '\r' < start.txt | grep -qx 'started two words' || { echo "::error::the arguments did not arrive"; exit 1; }
+          echo "x86_64-uefi: starts with its arguments" >> "$GITHUB_STEP_SUMMARY"
+          # test.bat beside the application, on the disk the profile mounts read-only:
+          # the script without its part that writes, and its output without that part's lines.
+          sed '/^rem files:/,/^rem end of files/d' out/test.bat > out/TEST.BAT
+          grep -vxE 'x|f1\.txt|f3\.txt|okt removed' out/expected.txt > out/expected-ro.txt
+          h="$HOME/.mcpp/registry/data/xpkgs"
+          dirun=$(find "$h" -path '*xim-x-dirun/0.5.0/bin/dirun' -type f | head -1)
+          ovmf=$(find "$h" -path '*xim-x-ovmf/9.2.4-3/dirun.toml' -type f | head -1)
+          qemu=$(find "$h" -path '*xim-x-qemu-x86/*/bin/qemu-system-x86_64' -type f | head -1)
+          "$dirun" --payload out/cmd.exe.efi --profile "$ovmf" --emulator "$qemu" --memory 2048 \
+            --file "$PWD/out/TEST.BAT=TEST.BAT" -- /c TEST.BAT > run.txt
+          cp out/expected-ro.txt out/expected.txt
+          sh out/check.sh run.txt
+          echo "x86_64-uefi: runs" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Run test.bat (an i386 image under okrun)
+        if: matrix.check == 'run'
+        run: |
+          set -euo pipefail
+          cp .github/mcpp/test.bat test.bat
+          mcpp run cmd.exe --release --target '${{ matrix.target }}' -- /c test.bat > run.txt
+          sh .github/mcpp/check.sh run.txt
+          echo "${{ matrix.target }}: runs" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Run test.bat in DOSBox
         if: matrix.check == 'dos'

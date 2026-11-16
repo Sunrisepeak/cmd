@@ -319,14 +319,14 @@ mcpp build --release --target aarch64-openkal
 ```
 
 </td></tr>
-<tr><td>openkal image i386<br><code>i686-openkal</code></td><td>builds</td><td>
+<tr><td>openkal image i386<br><code>i686-openkal</code></td><td>runs</td><td>
 
 ```sh
 mcpp build --release --target i686-openkal
 ```
 
 </td></tr>
-<tr><td>UEFI x86_64<br><code>x86_64-uefi</code></td><td>starts</td><td>
+<tr><td>UEFI x86_64<br><code>x86_64-uefi</code></td><td>runs ²</td><td>
 
 ```sh
 mcpp build --release --target x86_64-uefi
@@ -340,7 +340,7 @@ mcpp build --release --target i586-dos-djgpp
 ```
 
 </td></tr>
-<tr><td>MS-DOS (openkal, experimental)<br><code>i686-dos-musl</code></td><td>starts</td><td>
+<tr><td>MS-DOS (openkal, experimental)<br><code>i686-dos-musl</code></td><td>starts ³</td><td>
 
 ```sh
 mcpp build --release --target i686-dos-musl
@@ -350,6 +350,14 @@ mcpp build --release --target i686-dos-musl
 </table>
 
 ¹ Debug build only for now (`mcpp build --target x86_64-macos-musl`).
+
+² The script without its part that writes files: the firmware's disk is read-only.
+
+³ openkal-dos's first stack is 64 KiB (mcpplibs/openkal-dos#3); an `IF` in a batch file needs more, and the script ends there.
+
+The UEFI and openkal DOS rows run in a machine that mcpp installs on first use, so their runner is
+enabled on request: `[target.x86_64-uefi] runner = { enabled = true }` in `mcpp.toml` or this
+machine's `config.toml`, or `MCPP_TARGET_X86_64_UEFI_RUNNER_ENABLED=true` for one `mcpp run`.
 
 </details>
 
