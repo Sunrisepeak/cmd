@@ -139,23 +139,47 @@ jobs:
           sh .github/mcpp/check.sh web.txt
           echo "wasm32-emscripten in Chrome: runs" >> "$GITHUB_STEP_SUMMARY"
 
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
+          name: site
           path: site
 
+  # GitHub Pages serves the branch gh-pages: main's page at its root, and the
+  # page of each pull request from this repository at pr-preview/pr-<number>/
+  # until the pull request is closed (.github/workflows/preview.yml).
   pages:
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     needs: web
     runs-on: ubuntu-24.04
     permissions:
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deploy.outputs.page_url }}
+      contents: write
+    concurrency: gh-pages
     steps:
-      - id: deploy
-        uses: actions/deploy-pages@v4
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with: { name: site, path: site }
+      - uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: site
+          branch: gh-pages
+          clean-exclude: pr-preview/
+
+  preview:
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    needs: web
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      pull-requests: write
+    concurrency: gh-pages
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with: { name: site, path: site }
+      - uses: rossjrw/pr-preview-action@v1
+        with:
+          source-dir: site
+          action: deploy
 
   # Built on Linux x86_64; run by another machine, an emulator, or not at all.
   cross:
