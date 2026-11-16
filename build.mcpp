@@ -11,7 +11,11 @@ import mcpp.dist.web;
 // file system and a module that mcpp/web.html starts.  The web directory is
 //   mcpp pack cmd.exe --profile web --target wasm32-emscripten --pkg-format web
 int main() {
-    mcpp::artifact_name("exe", "{name}");
+    // On wasm32-emscripten the row's suffix is kept: the launcher is cmd.exe.js
+    // beside cmd.exe.wasm, the names node, the web page and mcpp.dist.web expect
+    // (mcpp 2026.11.16.1 gives a name the project states precedence over it).
+    if (std::string_view(mcpp::target_os()) != "emscripten")
+        mcpp::artifact_name("exe", "{name}");
 
     if (std::string_view(mcpp::target_os()) == "emscripten") {
         // setjmp/longjmp interrupt a builtin; the interpreter recurses deeply.

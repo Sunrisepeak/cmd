@@ -71,7 +71,7 @@
         <span>script.bat</span>
         <select id="example" aria-label="Examples"></select>
         <span class="grow"></span>
-        <span id="status">Loading…</span>
+        <span id="status">Loading...</span>
         <button id="run" class="primary" disabled title="Ctrl+Enter">Run</button>
       </div>
       <textarea id="script" class="mono" spellcheck="false" aria-label="Batch file"></textarea>
@@ -166,7 +166,7 @@
 
   async function run(label, argv, extra) {
     if (busy) return;
-    busy = true; runButton.disabled = true; state.textContent = 'Running…';
+    busy = true; runButton.disabled = true; state.textContent = 'Running...';
     say('\\work> ' + label, 'cmd');
     try {
       const r = await runCmd(argv, extra);
@@ -208,7 +208,7 @@
     say('and open http://localhost:8000/, or use the online page linked from the README.', 'note');
   } else if (typeof createCmd !== 'function') {
     state.textContent = 'Failed';
-    say('{{name}}.js did not load. Open index.html from the directory mcpp pack writes (…/web/).', 'err');
+    say('{{name}}.js did not load. Open index.html from the directory mcpp pack writes (.../web/).', 'err');
   } else {
     // One instance up front, so the first click is not the one that compiles.
     createCmd({ say() {}, printErr() {} }).then(() => {
