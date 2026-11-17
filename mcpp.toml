@@ -2,7 +2,7 @@
 name        = "cmd"
 version     = "0.1.0"
 description = "A faithful reimplementation of the Windows cmd.exe command interpreter for Unix."
-mcpp        = ">=2026.11.17.1"
+mcpp        = ">=2026.11.17.2"
 
 # Both personalities are built from the same C sources.  COMMAND.COM is the
 # classic MS-DOS variant, which additionally executes AUTOEXEC.BAT: the same
@@ -19,7 +19,7 @@ sources     = ["*.c", "!cmain.c"]
 files = ["mcpp/cmd.rc"]
 
 # build.mcpp states the Emscripten link and the web page (mcpp.dist.web).
-# 0.22.1 is the version openkal-platform 0.29.1 builds with; one build holds one.
+# 0.22.1 is the version openkal-platform 0.29.2 builds with; one build holds one.
 [build-dependencies.mcpp]
 plugins = { version = "0.22.1", features = ["dist-web"], host-module = true }
 
@@ -44,12 +44,12 @@ i586-dos-djgpp.platform  = "djgpp-platform@0.2.0"
 
 # The rows openkal-platform serves, the engine's own among them (the musl rows,
 # openkal, UEFI), take the release whose build programs use mcpp.plugins 0.22.1,
-# the version above: one build holds one. mcpp 2026.11.17.1's own default for
-# its rows is openkal-platform 0.28.0, which builds with 0.20.0. The selector
-# reads the triple (`env`): before a platform is chosen, a row's C library is
-# the one its platform will state.
+# the version above: one build holds one. 0.29.2 states the hosts of each
+# runner, so a row the machine starts itself (x86_64-windows-musl on Windows)
+# runs with none. The selector reads the triple (`env`): before a platform is
+# chosen, a row's C library is the one its platform will state.
 [target.'cfg(any(env = "musl", os = "openkal", os = "uefi"))']
-platform = "openkal-platform@0.29.1"
+platform = "openkal-platform@0.29.2"
 
 # openkal's musl has neither sysctl nor _NSGetExecutablePath (lselfpath.c).
 [target.'cfg(c-abi = "musl")'.build]
