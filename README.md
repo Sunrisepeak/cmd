@@ -375,12 +375,23 @@ mcpp build --release --target i686-dos-musl
 ```
 
 </td></tr>
+<tr><td>System V Release 4 i386 (openkal, preview)<br><code>i686-svr4-musl</code></td><td>runs ³</td><td>
+
+```sh
+mcpp build --release --target i686-svr4-musl
+```
+
+</td></tr>
 </table>
 
 ¹ Debug build only for now (`mcpp build --target x86_64-macos-musl`).
 
 ² The script without its part that writes files: on UEFI a file is not renamed and a listing
 shows names without their extension; under openkal DOS a subdirectory is not listed.
+
+³ A static ELF32 executable that links nothing of a system and enters the kernel through the
+call gate. It is run under an emulation of the System V i386 interface on Linux x86_64 (ibcs-us,
+as UnixWare 7), not on a System V kernel, and it starts no external command there.
 
 The NetBSD and OpenBSD rows, and the openkal rows beyond mcpp's own, come from the platform
 the package index names for them. The FreeBSD, NetBSD, OpenBSD, Android, UEFI and DOS rows run

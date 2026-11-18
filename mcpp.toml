@@ -41,6 +41,9 @@ defines = ["ENABLE_AUTOEXEC=1"]
 # delivers a run's files (test.bat).
 [target]
 i586-dos-djgpp.platform  = "djgpp-platform@0.2.0"
+# The System V row is openkal-platform 0.30.0's, later than mcpp's default release
+# of it: the row's implementation (openkal-svr4) is the platform's statement.
+i686-svr4-musl.platform  = "openkal-platform@0.30.0"
 
 # The rows openkal-platform serves, the engine's own among them (the musl rows,
 # openkal, UEFI), take mcpp's default release of it: 0.29.2 from mcpp

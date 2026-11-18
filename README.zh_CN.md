@@ -351,6 +351,13 @@ mcpp build --release --target i686-dos-musl
 ```
 
 </td></tr>
+<tr><td>System V Release 4 i386 (openkal, preview)<br><code>i686-svr4-musl</code></td><td>运行 ⁴</td><td>
+
+```sh
+mcpp build --release --target i686-svr4-musl
+```
+
+</td></tr>
 </table>
 
 ¹ 目前仅支持调试构建（`mcpp build --target x86_64-macos-musl`）。
@@ -358,6 +365,9 @@ mcpp build --release --target i686-dos-musl
 ² 不含写文件的部分：固件的磁盘为只读。
 
 ³ openkal-dos 的初始栈为 64 KiB（mcpplibs/openkal-dos#3）；批处理中的 `IF` 需要更多，脚本在此结束。
+
+⁴ 静态 ELF32 可执行文件，不链接系统的任何文件，经调用门进入内核。它在 Linux x86_64 上的 System V i386 接口模拟
+（ibcs-us，UnixWare 7 的接口）下运行，不是在 System V 内核上；在该模拟下不启动外部命令。
 
 UEFI 与 openkal DOS 行在 mcpp 首次使用时安装的虚拟机中运行，因此其运行器需显式启用：在 `mcpp.toml`
 或本机 `config.toml` 中写 `[target.x86_64-uefi] runner = { enabled = true }`，或对单次 `mcpp run`
