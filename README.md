@@ -249,10 +249,10 @@ mcpp build --release --target aarch64-windows-gnu
 ```
 
 </td></tr>
-<tr><td>macOS x86_64<br><code>x86_64-macos-musl</code></td><td>runs ¹</td><td>
+<tr><td>macOS x86_64, and PureDarwin<br><code>x86_64-macos-musl</code></td><td>runs ¹</td><td>
 
 ```sh
-mcpp build --target x86_64-macos-musl
+mcpp build --release --target x86_64-macos-musl
 ```
 
 </td></tr>
@@ -398,7 +398,9 @@ mcpp build --release --target x86_64-haiku
 </td></tr>
 </table>
 
-¹ Debug build only for now (`mcpp build --target x86_64-macos-musl`).
+¹ One Mach-O executable that links nothing but the system library. It is run on an Intel Mac,
+and on Linux x86_64 in PureDarwin (xnu with no macOS above it), booted from the developer
+preview its project publishes: an experiment, whose image is not mirrored.
 
 ² The script without its part that writes files: on UEFI a file is not renamed and a listing
 shows names without their extension; under openkal DOS a subdirectory is not listed.
@@ -413,7 +415,7 @@ package index, and run in an image of the system (Debian's; a Haiku nightly) boo
 
 The NetBSD and OpenBSD rows, and the openkal rows beyond mcpp's own, come from the platform
 the package index names for them. The FreeBSD, NetBSD, OpenBSD, Android, UEFI, DOS, System V,
-GNU/Hurd and Haiku rows run
+GNU/Hurd and Haiku rows, and the Darwin row on Linux, run
 in a machine or an emulator that mcpp installs on first use, so their runner is enabled on
 request: `[target.x86_64-uefi] runner = { enabled = true }` in `mcpp.toml` or this machine's
 `config.toml`, or `MCPP_TARGET_X86_64_UEFI_RUNNER_ENABLED=true` for one `mcpp run`. A file the

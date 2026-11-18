@@ -162,7 +162,9 @@ jobs:
       matrix:
         include:
           - { target: aarch64-windows-gnu,   check: artifact }
-          - { target: x86_64-macos-musl,     check: artifact, debug: true }
+          # Run on an Intel Mac (the job macos-x86_64), and here in PureDarwin: xnu with
+          # no macOS above it, booted from its project's developer preview (an experiment).
+          - { target: x86_64-macos-musl,     check: artifact, run: true, refusal: true }
           - { target: x86_64-freebsd,        check: run }
           - { target: aarch64-freebsd,       check: run }
           - { target: x86_64-netbsd,         check: run }
@@ -206,7 +208,7 @@ jobs:
             mcpp pack --target openkal --all-programs --mode self-contained --systems all
             cp target/dist/cmd-*-openkal-bundle-all.tar.gz out/
           else
-            mcpp build ${{ matrix.debug && ' ' || '--release' }} --target "$t"
+            mcpp build --release --target "$t"
             find target -path '*/bin/*' -type f \( -name 'cmd.exe*' -o -name 'COMMAND.COM*' \) -exec cp {} out/ \;
           fi
           cp .github/mcpp/test.bat .github/mcpp/expected.txt .github/mcpp/check.sh out/

@@ -253,10 +253,10 @@ mcpp build --release --target aarch64-windows-gnu
 ```
 
 </td></tr>
-<tr><td>macOS x86_64<br><code>x86_64-macos-musl</code></td><td>运行 ¹</td><td>
+<tr><td>macOS x86_64 与 PureDarwin<br><code>x86_64-macos-musl</code></td><td>运行 ¹</td><td>
 
 ```sh
-mcpp build --target x86_64-macos-musl
+mcpp build --release --target x86_64-macos-musl
 ```
 
 </td></tr>
@@ -374,7 +374,8 @@ mcpp build --release --target x86_64-haiku
 </td></tr>
 </table>
 
-¹ 目前仅支持调试构建（`mcpp build --target x86_64-macos-musl`）。
+¹ 一个只链接系统库的 Mach-O 可执行文件。它在 Intel Mac 上运行，也在 Linux x86_64 上的 PureDarwin
+（其上没有 macOS 的 xnu）中运行，该系统由其项目发布的开发者预览映像启动：属于实验，映像不作镜像。
 
 ² 不含写文件的部分：固件的磁盘为只读。
 
@@ -387,7 +388,7 @@ mcpp build --release --target x86_64-haiku
 （Debian GNU/Hurd 的 glibc；Haiku 的 libroot，均为包索引中的 sysroot 包），并在由 dirun 启动的系统映像
 （Debian 的映像；Haiku 的 nightly 映像）中运行。
 
-UEFI、openkal DOS、System V、GNU/Hurd 与 Haiku 行在 mcpp 首次使用时安装的虚拟机或模拟器中运行，因此其运行器需显式启用：在 `mcpp.toml`
+UEFI、openkal DOS、System V、GNU/Hurd 与 Haiku 行，以及 Linux 上的 Darwin 行，在 mcpp 首次使用时安装的虚拟机或模拟器中运行，因此其运行器需显式启用：在 `mcpp.toml`
 或本机 `config.toml` 中写 `[target.x86_64-uefi] runner = { enabled = true }`，或对单次 `mcpp run`
 设置 `MCPP_TARGET_X86_64_UEFI_RUNNER_ENABLED=true`。
 

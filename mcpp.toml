@@ -50,6 +50,17 @@ i686-svr4-musl.platform  = "openkal-platform@0.30.0"
 x86_64-hurd.platform     = { path = "mcpp/platforms/hurd" }
 x86_64-haiku.platform    = { path = "mcpp/platforms/haiku" }
 
+# On a Linux machine the Darwin row is run in PureDarwin (xnu with no macOS
+# above it), booted by dirun from the image its project publishes; a Mac runs
+# the program itself. The image is a developer preview, not mirrored: an
+# experiment. It boots by UEFI, so the runner gives it a firmware. mcpp holds
+# that an Apple artifact off macOS is reached only through an execution host
+# (`run_under`); here the runner's machine is that host, so the key names a
+# program that passes its arguments on.
+[target.x86_64-macos-musl]
+run_under = ["env"]
+runner = { cmd = ["dirun", "--profile", "{pkg:puredarwin-disk-image}/dirun.toml", "--var", "firmware={pkg:ovmf}/share/edk2/edk2-x86_64-code.fd", "--emulator", "{pkg:qemu-x86}/bin/qemu-system-x86_64", "--", "{}"], host = "any", hosts = ["linux-x86_64"], requires = ["xim:dirun@0.7.0", "xim:puredarwin-disk-image@25.5-20261118", "xim:ovmf@9.2.4-4", "xim:qemu-x86@9.2.4-1"], enabled = false }
+
 # The rows openkal-platform serves, the engine's own among them (the musl rows,
 # openkal, UEFI), take mcpp's default release of it: 0.29.2 from mcpp
 # 2026.11.18.1, whose build programs use mcpp.plugins 0.22.1, the version
@@ -68,3 +79,10 @@ defines = ["LIBCMD_SYSV=1"]
 # The browser build of wasm32-emscripten; build.mcpp states its link.
 [profile.web]
 opt = 2
+
+# The Darwin row links openkal-macos 0.23.5, which binds the private parts of
+# fork weakly, so the program starts where libSystem does not export them
+# (PureDarwin). It is taken from its repository by tag: the release is later
+# than the one the platform names, and is not in the package index.
+[target.x86_64-macos-musl.dependencies]
+mcpplibs.openkal-macos = { git = "https://github.com/mcpplibs/openkal-macos.git", tag = "0.23.5", override = true }
