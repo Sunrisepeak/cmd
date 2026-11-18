@@ -2,7 +2,7 @@
 name        = "cmd"
 version     = "0.1.0"
 description = "A faithful reimplementation of the Windows cmd.exe command interpreter for Unix."
-mcpp        = ">=2026.11.17.2"
+mcpp        = ">=2026.11.18.1"
 
 # Both personalities are built from the same C sources.  COMMAND.COM is the
 # classic MS-DOS variant, which additionally executes AUTOEXEC.BAT: the same
@@ -43,13 +43,10 @@ defines = ["ENABLE_AUTOEXEC=1"]
 i586-dos-djgpp.platform  = "djgpp-platform@0.2.0"
 
 # The rows openkal-platform serves, the engine's own among them (the musl rows,
-# openkal, UEFI), take the release whose build programs use mcpp.plugins 0.22.1,
-# the version above: one build holds one. 0.29.2 states the hosts of each
-# runner, so a row the machine starts itself (x86_64-windows-musl on Windows)
-# runs with none. The selector reads the triple (`env`): before a platform is
-# chosen, a row's C library is the one its platform will state.
-[target.'cfg(any(env = "musl", os = "openkal", os = "uefi"))']
-platform = "openkal-platform@0.29.2"
+# openkal, UEFI), take mcpp's default release of it: 0.29.2 from mcpp
+# 2026.11.18.1, whose build programs use mcpp.plugins 0.22.1, the version
+# above, and which states the hosts of each runner, so a row the machine starts
+# itself (x86_64-windows-musl on Windows) runs with none.
 
 # openkal's musl has neither sysctl nor _NSGetExecutablePath (lselfpath.c).
 [target.'cfg(c-abi = "musl")'.build]
