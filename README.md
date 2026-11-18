@@ -187,7 +187,7 @@ mcpp pack cmd.exe --profile web --target wasm32-emscripten --pkg-format web
 ```
 
 <details>
-<summary>More targets: Linux, Windows, macOS, FreeBSD, NetBSD, OpenBSD, Android, WebAssembly, openkal images, UEFI and DOS</summary>
+<summary>More targets: Linux, Windows, macOS, FreeBSD, NetBSD, OpenBSD, Android, WebAssembly, openkal images, UEFI, DOS, System V, GNU/Hurd and Haiku</summary>
 
 **runs**: a test batch script gives the same output as on Linux x86_64 (checked by `.github/workflows/mcpp.yml`); **starts**: the interpreter starts and exits; **builds**: not run.
 
@@ -382,6 +382,20 @@ mcpp build --release --target i686-svr4-musl
 ```
 
 </td></tr>
+<tr><td>GNU/Hurd x86_64 (preview)<br><code>x86_64-hurd</code></td><td>runs ⁴</td><td>
+
+```sh
+mcpp build --release --target x86_64-hurd
+```
+
+</td></tr>
+<tr><td>Haiku x86_64 (preview)<br><code>x86_64-haiku</code></td><td>runs ⁴</td><td>
+
+```sh
+mcpp build --release --target x86_64-haiku
+```
+
+</td></tr>
 </table>
 
 ¹ Debug build only for now (`mcpp build --target x86_64-macos-musl`).
@@ -393,8 +407,13 @@ shows names without their extension; under openkal DOS a subdirectory is not lis
 call gate. It is run under an emulation of the System V i386 interface on Linux x86_64 (ibcs-us,
 as UnixWare 7), not on a System V kernel, and it starts no external command there.
 
+⁴ A row this project states itself (`mcpp/platforms/`): built on Linux with the LLVM toolchain
+over the system's own base (Debian GNU/Hurd's glibc; Haiku's libroot), a sysroot package of the
+package index, and run in an image of the system (Debian's; a Haiku nightly) booted by dirun.
+
 The NetBSD and OpenBSD rows, and the openkal rows beyond mcpp's own, come from the platform
-the package index names for them. The FreeBSD, NetBSD, OpenBSD, Android, UEFI and DOS rows run
+the package index names for them. The FreeBSD, NetBSD, OpenBSD, Android, UEFI, DOS, System V,
+GNU/Hurd and Haiku rows run
 in a machine or an emulator that mcpp installs on first use, so their runner is enabled on
 request: `[target.x86_64-uefi] runner = { enabled = true }` in `mcpp.toml` or this machine's
 `config.toml`, or `MCPP_TARGET_X86_64_UEFI_RUNNER_ENABLED=true` for one `mcpp run`. A file the

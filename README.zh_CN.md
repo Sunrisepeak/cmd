@@ -191,7 +191,7 @@ mcpp pack cmd.exe --profile web --target wasm32-emscripten --pkg-format web
 ```
 
 <details>
-<summary>更多目标：Linux、Windows、macOS、FreeBSD、Android、WebAssembly、openkal 映像、UEFI 与 DOS</summary>
+<summary>更多目标：Linux、Windows、macOS、FreeBSD、Android、WebAssembly、openkal 映像、UEFI、DOS、System V、GNU/Hurd 与 Haiku</summary>
 
 **运行**：测试批处理输出与 Linux x86_64 相同（由 `.github/workflows/mcpp.yml` 检查）；**启动**：解释器能启动并退出；**构建**：未运行。
 
@@ -358,6 +358,20 @@ mcpp build --release --target i686-svr4-musl
 ```
 
 </td></tr>
+<tr><td>GNU/Hurd x86_64 (preview)<br><code>x86_64-hurd</code></td><td>运行 ⁵</td><td>
+
+```sh
+mcpp build --release --target x86_64-hurd
+```
+
+</td></tr>
+<tr><td>Haiku x86_64 (preview)<br><code>x86_64-haiku</code></td><td>运行 ⁵</td><td>
+
+```sh
+mcpp build --release --target x86_64-haiku
+```
+
+</td></tr>
 </table>
 
 ¹ 目前仅支持调试构建（`mcpp build --target x86_64-macos-musl`）。
@@ -369,7 +383,11 @@ mcpp build --release --target i686-svr4-musl
 ⁴ 静态 ELF32 可执行文件，不链接系统的任何文件，经调用门进入内核。它在 Linux x86_64 上的 System V i386 接口模拟
 （ibcs-us，UnixWare 7 的接口）下运行，不是在 System V 内核上；在该模拟下不启动外部命令。
 
-UEFI 与 openkal DOS 行在 mcpp 首次使用时安装的虚拟机中运行，因此其运行器需显式启用：在 `mcpp.toml`
+⁵ 由本项目自行陈述的行（`mcpp/platforms/`）：在 Linux 上以 LLVM 工具链构建，基于系统自身的基础库
+（Debian GNU/Hurd 的 glibc；Haiku 的 libroot，均为包索引中的 sysroot 包），并在由 dirun 启动的系统映像
+（Debian 的映像；Haiku 的 nightly 映像）中运行。
+
+UEFI、openkal DOS、System V、GNU/Hurd 与 Haiku 行在 mcpp 首次使用时安装的虚拟机或模拟器中运行，因此其运行器需显式启用：在 `mcpp.toml`
 或本机 `config.toml` 中写 `[target.x86_64-uefi] runner = { enabled = true }`，或对单次 `mcpp run`
 设置 `MCPP_TARGET_X86_64_UEFI_RUNNER_ENABLED=true`。
 

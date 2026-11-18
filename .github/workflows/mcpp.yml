@@ -182,6 +182,10 @@ jobs:
           # A static ELF32 for the System V i386 kernel interface, run under an
           # emulation of that interface (ibcs-us) in a user namespace.
           - { target: i686-svr4-musl,        check: run, refusal: true, userns: true }
+          # Rows of this project's own (mcpp/platforms/): built over the system's base,
+          # run in an image of the system booted by dirun.
+          - { target: x86_64-hurd,           check: run, refusal: true }
+          - { target: x86_64-haiku,          check: run, refusal: true }
     defaults:
       run:
         shell: bash
@@ -220,7 +224,7 @@ jobs:
           [ "$s" = 2 ] && grep -q 'runner-not-enabled' refused.txt || { echo "::error::$t: expected a refusal (status 2), got $s"; exit 1; }
 
       - name: Enable KVM
-        if: matrix.check == 'run'
+        if: matrix.check == 'run' || matrix.run
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
@@ -237,7 +241,7 @@ jobs:
       # The row's runner, enabled for this run; test.bat is given with the run and
       # is in the program's working directory, wherever the runner starts it.
       - name: Run test.bat
-        if: matrix.check == 'run'
+        if: matrix.check == 'run' || matrix.run
         run: |
           set -euo pipefail
           t='${{ matrix.target }}'
