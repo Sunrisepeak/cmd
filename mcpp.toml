@@ -41,9 +41,12 @@ defines = ["ENABLE_AUTOEXEC=1"]
 # delivers a run's files (test.bat).
 [target]
 i586-dos-djgpp.platform  = "djgpp-platform@0.2.0"
-# The System V row is openkal-platform 0.30.0's, later than mcpp's default release
-# of it: the row's implementation (openkal-svr4) is the platform's statement.
-i686-svr4-musl.platform  = "openkal-platform@0.30.0"
+# The System V row is openkal-platform 0.30.1's, later than mcpp's default release
+# of it: the row's implementation (openkal-svr4) is the platform's statement. From
+# 0.30.1 the row writes no PT_PHDR program header, which the kernel of System V/386
+# Release 4.0 needs of a static program: with it this project's test scripts ran on
+# that kernel (Release 4.0 Version 3.0 in QEMU, once, by hand; CI runs the emulation).
+i686-svr4-musl.platform  = "openkal-platform@0.30.1"
 # GNU/Hurd and Haiku are rows of this project's own (mcpp/platforms/): each
 # states its row, the base system it is built over (a sysroot package of xim)
 # and the machine it is run in (a disk image of xim, booted by dirun).
