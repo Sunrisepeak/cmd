@@ -2,7 +2,7 @@
 name        = "cmd"
 version     = "0.1.0"
 description = "A faithful reimplementation of the Windows cmd.exe command interpreter for Unix."
-mcpp        = ">=2026.11.18.1"
+mcpp        = ">=2026.11.19.1"
 
 # Both personalities are built from the same C sources.  COMMAND.COM is the
 # classic MS-DOS variant, which additionally executes AUTOEXEC.BAT: the same
@@ -36,11 +36,13 @@ defines = ["ENABLE_AUTOEXEC=1"]
 
 # Every row openkal-platform serves takes one release of it, stated here: 0.31.0,
 # the openkal 0.26 family, whose build programs use mcpp.plugins 0.26.1, the
-# version above (one build holds one; mcpp 2026.11.18.1's default for its own
-# rows, 0.29.2, builds with 0.22.1). The other rows beyond mcpp's own are served by
-# the platform the package index names for them (mcpp.platforms: the NetBSD,
-# OpenBSD, GNU/Hurd and Haiku rows) or by one pinned here (djgpp-platform 0.2.0,
-# whose runner delivers a run's files).
+# version above (one build holds one). mcpp 2026.11.19.1 serves its own rows with
+# this release too; stating it keeps the pair when a later mcpp moves on, and
+# 2026.11.19.1 resolves each member of the family at the release named, so a
+# newer member listed alone does not displace it. The other rows beyond mcpp's
+# own are served by the platform the package index names for them
+# (mcpp.platforms: the NetBSD, OpenBSD, GNU/Hurd and Haiku rows) or by one
+# pinned here (djgpp-platform 0.2.0, whose runner delivers a run's files).
 [target]
 i586-dos-djgpp.platform      = "djgpp-platform@0.2.0"
 x86_64-linux-musl.platform   = "openkal-platform@0.31.0"
