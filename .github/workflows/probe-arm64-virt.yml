@@ -1,0 +1,28 @@
+# TEMPORARY PROBE (draft PR, closed after reading): does a GitHub-hosted arm64
+# runner offer hardware virtualization to a guest? An Android arm64 system image
+# needs an arm64 host with it: KVM on Linux, Hypervisor.framework on macOS.
+name: probe-arm64-virt
+on: pull_request
+jobs:
+  linux-arm64:
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - name: KVM on the Linux arm64 runner
+        run: |
+          uname -a
+          lscpu | grep -E 'Architecture|Model name|Vendor|Virtualization|Hypervisor' || true
+          ls -l /dev/kvm 2>&1 || true
+          lsmod | grep -i kvm || echo "no kvm module listed"
+          sudo modprobe kvm 2>&1 || true
+          ls -l /dev/kvm 2>&1 || true
+          sudo python3 -c "import os,fcntl; fd=os.open('/dev/kvm',os.O_RDWR); print('KVM_GET_API_VERSION', fcntl.ioctl(fd,0xAE00))" 2>&1 || echo "KVM unusable"
+          sudo dmesg 2>/dev/null | grep -iE 'kvm|hyp' | head -10 || true
+  macos-arm64:
+    runs-on: macos-15
+    steps:
+      - name: Hypervisor.framework on the macOS arm64 runner
+        run: |
+          uname -a; sw_vers
+          sysctl -n machdep.cpu.brand_string || true
+          sysctl kern.hv_support 2>&1 || true
+          sysctl kern.hv_vmm_present 2>&1 || true
