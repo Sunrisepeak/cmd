@@ -2,6 +2,9 @@ name: probe
 # Temporary: how a Windows program started by x86_64-windows-musl's interpreter
 # reads argument zero written with '/' (wine misreads it), on a real Windows.
 on: pull_request
+env:
+  MSYS_NO_PATHCONV: '1'
+  XLINGS_NON_INTERACTIVE: '1'
 jobs:
   windows:
     runs-on: windows-2022
