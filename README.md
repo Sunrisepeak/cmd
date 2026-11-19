@@ -189,7 +189,7 @@ mcpp pack cmd.exe --profile web --target wasm32-emscripten --pkg-format web
 <details>
 <summary>More targets: Linux, Windows, macOS, FreeBSD, NetBSD, OpenBSD, Android, WebAssembly, openkal images, UEFI, DOS, System V, GNU/Hurd and Haiku</summary>
 
-**runs**: a test batch script gives the same output as on Linux x86_64 (checked by `.github/workflows/mcpp.yml`); **starts**: the interpreter starts and exits; **builds**: not run. The script's part that starts a program (the interpreter itself, through `%COMSPEC%`) is left out where no program can be started: the browser and node (WebAssembly), an openkal image under okrun (it starts a program but not an image, mcpplibs/openkal-image#42), UEFI, both DOS rows, System V until its row claims `openkal.process` (openkal-svr4 0.3.0), `x86_64-windows-musl`, whose interpreter does not yet find a program named by a path with a drive letter, and PureDarwin, where openkal-macos reports no execute bit (mcpplibs/openkal-macos#53).
+**runs**: a test batch script gives the same output as on Linux x86_64 (checked by `.github/workflows/mcpp.yml`); **starts**: the interpreter starts and exits; **builds**: not run. The script's part that starts a program (the interpreter itself, through `%COMSPEC%`) is left out where no program can be started: the browser and node (WebAssembly), an openkal image under okrun (it starts a program but not an image, mcpplibs/openkal-image#42), UEFI, both DOS rows, `x86_64-windows-musl`, whose interpreter does not yet find a program named by a path with a drive letter, and PureDarwin, where openkal-macos reports no execute bit (mcpplibs/openkal-macos#53).
 
 <table>
 <tr><th>Target</th><th>Verified</th><th>Build command</th></tr>
@@ -409,8 +409,8 @@ script's output is compared without regard to case.
 call gate. It is run on a System V kernel: AT&T UNIX System V/386 Release 4.0 Version 3.0 in QEMU
 (xim's `svr4-disk-image`, technical verification only: the system is proprietary), booted by dirun
 as this project's runner for the row. The platform's own runner is an emulation of the interface
-(ibcs-us). The program starts no external command there (openkal-svr4 claims no
-`openkal.process`).
+(ibcs-us). From openkal-platform 0.31.0 (openkal-svr4 0.3.0, `openkal.process`) the
+interpreter starts external commands there.
 
 ⁴ A row of `mcpp.platforms` (mcpp-community/mcpp-platforms 0.2.1): built on Linux with the LLVM
 toolchain over the system's own base (Debian GNU/Hurd's glibc, at the versions of the image it

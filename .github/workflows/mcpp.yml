@@ -198,8 +198,9 @@ jobs:
           # A static ELF32 for the System V i386 kernel interface, run on the System V
           # kernel: AT&T UNIX System V/386 Release 4.0 Version 3.0 in QEMU (xim's
           # svr4-disk-image, technical verification only), this project's runner for the row.
-          # openkal-svr4 0.1.0 (the row of openkal-platform 0.30.1) claims no openkal.process.
-          - { target: i686-svr4-musl,        check: run, refusal: true, process: false }
+          # The whole script: from openkal-platform 0.31.0 (openkal-svr4 0.3.0) a program
+          # starts another there.
+          - { target: i686-svr4-musl,        check: run, refusal: true }
           # Rows of mcpp.platforms: built over the system's base, run in an image of the
           # system booted by dirun.
           - { target: x86_64-hurd,           check: run, refusal: true }

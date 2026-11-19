@@ -19,9 +19,9 @@ sources     = ["*.c", "!cmain.c"]
 files = ["mcpp/cmd.rc"]
 
 # build.mcpp states the Emscripten link and the web page (mcpp.dist.web).
-# 0.22.1 is the version openkal-platform 0.29.2 builds with; one build holds one.
+# 0.26.1 is the version openkal-platform 0.31.0 builds with; one build holds one.
 [build-dependencies.mcpp]
-plugins = { version = "0.22.1", features = ["dist-web"], host-module = true }
+plugins = { version = "0.26.1", features = ["dist-web"], host-module = true }
 
 # Target names carry the exact CMake output names; build.mcpp suppresses
 # mcpp's host-dependent executable suffix.
@@ -34,18 +34,30 @@ kind = "bin"
 main = "cmain.c"
 defines = ["ENABLE_AUTOEXEC=1"]
 
-# A row the built-in table does not serve is served by the platform the package
-# index names for it (openkal-platform: i686-linux-musl, i686-openkal,
-# x86_64-uefi, i686-dos-musl; mcpp.platforms: the NetBSD, OpenBSD, GNU/Hurd and
-# Haiku rows; djgpp-platform: i586-dos-djgpp). DJGPP's row is pinned: 0.2.0's
-# runner delivers a run's files (test.bat).
+# Every row openkal-platform serves takes one release of it, stated here: 0.31.0,
+# the openkal 0.26 family, whose build programs use mcpp.plugins 0.26.1, the
+# version above (one build holds one; mcpp 2026.11.18.1's default for its own
+# rows, 0.29.2, builds with 0.22.1). The other rows beyond mcpp's own are served by
+# the platform the package index names for them (mcpp.platforms: the NetBSD,
+# OpenBSD, GNU/Hurd and Haiku rows) or by one pinned here (djgpp-platform 0.2.0,
+# whose runner delivers a run's files).
 [target]
-i586-dos-djgpp.platform  = "djgpp-platform@0.2.0"
+i586-dos-djgpp.platform      = "djgpp-platform@0.2.0"
+x86_64-linux-musl.platform   = "openkal-platform@0.31.0"
+aarch64-linux-musl.platform  = "openkal-platform@0.31.0"
+i686-linux-musl.platform     = "openkal-platform@0.31.0"
+x86_64-windows-musl.platform = "openkal-platform@0.31.0"
+aarch64-macos-musl.platform  = "openkal-platform@0.31.0"
+x86_64-openkal.platform      = "openkal-platform@0.31.0"
+aarch64-openkal.platform     = "openkal-platform@0.31.0"
+i686-openkal.platform        = "openkal-platform@0.31.0"
+x86_64-uefi.platform         = "openkal-platform@0.31.0"
+i686-dos-musl.platform       = "openkal-platform@0.31.0"
 
-# The System V row is openkal-platform 0.30.1's, later than mcpp's default release
-# of it: the row's implementation (openkal-svr4) is the platform's statement, and
-# from 0.30.1 the row writes no PT_PHDR program header, which the kernel of
-# System V/386 Release 4.0 needs of a static program. This project runs the row on
+# The System V row's implementation (openkal-svr4) is the platform's statement:
+# from 0.30.1 the row writes no PT_PHDR program header, which the kernel of System
+# V/386 Release 4.0 needs of a static program, and from 0.31.0 (openkal-svr4 0.3.0)
+# a program starts another there (openkal.process). This project runs the row on
 # that kernel: AT&T UNIX System V/386 Release 4.0 Version 3.0 in QEMU, booted by
 # dirun from xim's svr4-disk-image (TECHNICAL VERIFICATION ONLY: the system is
 # proprietary). Its disk driver reads a disk only behind the system's own label, so
@@ -54,7 +66,7 @@ i586-dos-djgpp.platform  = "djgpp-platform@0.2.0"
 # and under TCG a run takes seconds. The platform's own runner, an emulation of
 # the interface (ibcs-us), is replaced here.
 [target.i686-svr4-musl]
-platform = "openkal-platform@0.30.1"
+platform = "openkal-platform@0.31.0"
 runner   = { cmd = ["dirun", "--profile", "{pkg:svr4-disk-image}/dirun.toml", "--emulator", "{pkg:qemu-x86}/bin/qemu-system-x86_64", "--accel", "tcg", "--", "{}"], host = "any", hosts = ["linux-x86_64"], requires = ["xim:dirun@0.8.0", "xim:svr4-disk-image@4.0.3-20261119", "xim:qemu-x86@9.2.4-1"], enabled = false }
 
 # On a Linux machine the Darwin row is run in PureDarwin (xnu with no macOS
@@ -63,17 +75,13 @@ runner   = { cmd = ["dirun", "--profile", "{pkg:svr4-disk-image}/dirun.toml", "-
 # experiment. It boots by UEFI, so the runner gives it a firmware. mcpp holds
 # that an Apple artifact off macOS is reached only through an execution host
 # (`run_under`); here the runner's machine is that host, so the key names a
-# program that passes its arguments on.
+# program that passes its arguments on. The platform's openkal-macos (0.24.0) binds
+# the private parts of fork weakly, so the program starts where libSystem does not
+# export them (PureDarwin).
 [target.x86_64-macos-musl]
+platform  = "openkal-platform@0.31.0"
 run_under = ["env"]
 runner = { cmd = ["dirun", "--profile", "{pkg:puredarwin-disk-image}/dirun.toml", "--var", "firmware={pkg:ovmf}/share/edk2/edk2-x86_64-code.fd", "--emulator", "{pkg:qemu-x86}/bin/qemu-system-x86_64", "--", "{}"], host = "any", hosts = ["linux-x86_64"], requires = ["xim:dirun@0.7.0", "xim:puredarwin-disk-image@25.5-20261118-1", "xim:ovmf@9.2.4-4", "xim:qemu-x86@9.2.4-1"], enabled = false }
-
-# The engine's own rows that openkal-platform serves (the musl rows of Linux
-# x86_64 and aarch64, Windows and macOS; openkal) take mcpp's default release of
-# it: 0.29.2 from mcpp 2026.11.18.1, whose build programs use mcpp.plugins
-# 0.22.1, the version above, and which states the hosts of each runner, so a row
-# the machine starts itself (x86_64-windows-musl on Windows) runs with none. The
-# rows the index names it for (above) take the index's release, 0.30.1.
 
 # openkal's musl has neither sysctl nor _NSGetExecutablePath (lselfpath.c).
 [target.'cfg(c-abi = "musl")'.build]
@@ -88,9 +96,3 @@ defines = ["LIBCMD_SYSV=1"]
 [profile.web]
 opt = 2
 
-# The Darwin row links openkal-macos 0.23.5, which binds the private parts of
-# fork weakly, so the program starts where libSystem does not export them
-# (PureDarwin). It is taken from its repository by tag: the release is later
-# than the one the platform names, and is not in the package index.
-[target.x86_64-macos-musl.dependencies]
-mcpplibs.openkal-macos = { git = "https://github.com/mcpplibs/openkal-macos.git", tag = "0.23.5", override = true }
