@@ -175,11 +175,10 @@ jobs:
           - { target: aarch64-linux-android, check: build }
           - { target: openkal,               check: artifact }
           - { target: i686-openkal,          check: run }
-          # The script without its part that writes files: openkal-uefi renames no
-          # file on the firmware's FAT and lists names without their extension, and
-          # openkal-dos lists no subdirectory (found by this check; to be fixed there).
-          - { target: x86_64-uefi,           check: run, refusal: true, files: false }
-          - { target: i686-dos-musl,         check: run, refusal: true, files: false }
+          # The whole script. Under openkal DOS a name is the one DOS keeps, in upper
+          # case (F1.TXT): there the output is compared without regard to case.
+          - { target: x86_64-uefi,           check: run, refusal: true }
+          - { target: i686-dos-musl,         check: run, refusal: true, foldcase: true }
           - { target: i586-dos-djgpp,        check: run }
           # A static ELF32 for the System V i386 kernel interface, run under an
           # emulation of that interface (ibcs-us) in a user namespace.
@@ -249,10 +248,7 @@ jobs:
           t='${{ matrix.target }}'
           export "MCPP_TARGET_$(echo "$t" | tr 'a-z-' 'A-Z_')_RUNNER_ENABLED=true"
           mkdir -p check && cp .github/mcpp/test.bat .github/mcpp/expected.txt .github/mcpp/check.sh check/
-          if [ '${{ matrix.files }}' = false ]; then
-            sed -i '/^rem files:/,/^rem end of files/d' check/test.bat
-            grep -vxE 'x|f1\.txt|f3\.txt|okt removed' .github/mcpp/expected.txt > check/expected.txt
-          fi
+          if [ '${{ matrix.foldcase }}' = true ]; then export CHECK_FOLD_CASE=1; fi
           mcpp run cmd.exe --release --target "$t" --file check/test.bat=TEST.BAT -- /c TEST.BAT > run.txt
           sh check/check.sh run.txt
           echo "${t}: runs" >> "$GITHUB_STEP_SUMMARY"
