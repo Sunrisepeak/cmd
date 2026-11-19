@@ -71,54 +71,16 @@ static void child_redirect_to_null(int target)
     close(fd);
 }
 
-#if defined(CMD_LIBC_MUSL)
-/* openkal's C library composes fork upon openkal.space, which a system that
- * starts only named programs (Windows) does not have: fork reports ENOSYS
- * there, and posix_spawn starts the program instead.  It places the three
- * streams; a program START detaches forms a group of its own (setsid is not
- * answered there), and a priority START asks for is not applied. */
+#if defined(_POSIX_SPAWN) && _POSIX_SPAWN > 0
+/* A system may start programs without being able to copy a process: there
+ * fork reports ENOSYS (a C library hosted on such a system, as openkal's is
+ * on Windows), and posix_spawn, POSIX's own way of starting a program,
+ * starts it instead.  It places the three streams; a program START
+ * detaches forms a group of its own, and a priority START asks for is not
+ * applied. */
 #include <spawn.h>
-#include <openkal/env.h>
 
 extern char **environ;
-
-/* Whether the system's conventions are Windows': openkal states them
- * (kal_env_system), and its C library searches by the same rule. */
-static int windows_conventions(void)
-{
-    char name[16];
-
-    return kal_env_system(name, sizeof(name)) == 7 &&
-           memcmp(name, "windows", 7) == 0;
-}
-
-/* Argument zero in Windows' spelling, in ZERO: cmd turned a typed '\'
- * into '/' to find the program, and a Windows program reads its own name
- * from its command line, where cmd.exe takes a '/' for a switch.  Returns
- * ARGV itself elsewhere, and a copy of it to free here; NULL when no copy
- * could be made. */
-static char **system_argv(char *const argv[], char *zero, size_t size)
-{
-    char **copy;
-    size_t n;
-    char *p;
-
-    if (!windows_conventions() || argv[0] == NULL ||
-        strchr(argv[0], '/') == NULL || strlen(argv[0]) >= size)
-        return (char **)argv;
-    for (n = 0; argv[n] != NULL; n++)
-        ;
-    copy = (char **)malloc((n + 1) * sizeof(*copy));
-    if (copy == NULL)
-        return NULL;
-    memcpy(copy, argv, (n + 1) * sizeof(*copy));
-    strcpy(zero, argv[0]);
-    for (p = zero; *p != '\0'; p++)
-        if (*p == '/')
-            *p = '\\';
-    copy[0] = zero;
-    return copy;
-}
 
 static int spawn_program(const char *path,
                          char *const argv[],
@@ -129,13 +91,8 @@ static int spawn_program(const char *path,
 {
     posix_spawn_file_actions_t actions;
     posix_spawnattr_t attr;
-    char zero[4096];
-    char **args;
     int i, r;
 
-    args = system_argv(argv, zero, sizeof(zero));
-    if (args == NULL)
-        return -1;
     posix_spawn_file_actions_init(&actions);
     posix_spawnattr_init(&attr);
     for (i = 0; i < 3; i++) {
@@ -149,28 +106,22 @@ static int spawn_program(const char *path,
         posix_spawnattr_setflags(&attr, POSIX_SPAWN_SETPGROUP);
         posix_spawnattr_setpgroup(&attr, 0);
     }
-    r = posix_spawn(pid, path, &actions, &attr, args,
+    r = posix_spawn(pid, path, &actions, &attr, argv,
                     envp != NULL ? envp : environ);
     posix_spawnattr_destroy(&attr);
     posix_spawn_file_actions_destroy(&actions);
-    if (args != (char **)argv)
-        free(args);
     if (r != 0) {
         errno = r;
         return -1;
     }
     return 0;
 }
-
-#else
-#define windows_conventions() 0
 #endif
 
 /* Whether NAME is a file this process may start.  access(X_OK) asks the
  * system that decides: the owner's execute bit is the wrong question for
  * another user's file, and a system that keeps no execute permission
- * (Windows, under openkal's C library) reports none in stat while access
- * answers yes. */
+ * reports none in stat while access answers yes. */
 static int is_runnable(const char *name)
 {
     struct stat st;
@@ -210,7 +161,7 @@ int libcmd_exec_sync(const char *path,
     int wstatus;
 
     pid = fork();
-#if defined(CMD_LIBC_MUSL)
+#if defined(_POSIX_SPAWN) && _POSIX_SPAWN > 0
     if (pid < 0 && errno == ENOSYS) {
         int fds[3];
 
@@ -257,7 +208,7 @@ int libcmd_exec_async(const char *path,
     pid_t pid;
 
     pid = fork();
-#if defined(CMD_LIBC_MUSL)
+#if defined(_POSIX_SPAWN) && _POSIX_SPAWN > 0
     if (pid < 0 && errno == ENOSYS) {
         int fds[3];
 
@@ -305,92 +256,54 @@ int libcmd_wait_pid(int pid, libcmd_exit_info_t *exit_info)
     return 0;
 }
 
-/* Tries DIR/NAME then SUFFIX (DIR is LEN long; none when LEN is 0) and
- * writes the name to OUT when it may be started. */
-static int try_candidate(const char *dir, size_t len,
-                         const char *name,
-                         const char *suffix, size_t suffix_len,
-                         char *out, size_t out_size)
-{
-    char candidate[4096];
-    size_t n = len, name_len = strlen(name);
-
-    if (len + 1 + name_len + suffix_len + 1 > sizeof(candidate))
-        return -1;
-    memcpy(candidate, dir, len);
-    if (len > 0)
-        candidate[n++] = '/';
-    memcpy(candidate + n, name, name_len);
-    memcpy(candidate + n + name_len, suffix, suffix_len);
-    candidate[n + name_len + suffix_len] = '\0';
-    if (!is_runnable(candidate))
-        return -1;
-    return libcmd_sprintf_s(out, out_size, "%s", candidate) >= 0 ? 0 : -1;
-}
-
-/* Tries NAME in DIR as the system would: as given, or, under Windows'
- * conventions and for a name without a suffix, with each suffix PATHEXT
- * lists in its order and not as given (Windows' own rule). */
-static int try_in_dir(const char *dir, size_t len, const char *name, int win,
-                      char *out, size_t out_size)
-{
-    const char *suffix, *end;
-
-    if (!win || strchr(name, '.') != NULL)
-        return try_candidate(dir, len, name, "", 0, out, out_size);
-    suffix = getenv("PATHEXT");
-    if (suffix == NULL)
-        suffix = ".COM;.EXE;.BAT;.CMD";
-    while (*suffix != '\0') {
-        end = strchr(suffix, ';');
-        if (end == NULL)
-            end = suffix + strlen(suffix);
-        if (end > suffix &&
-            try_candidate(dir, len, name, suffix, (size_t)(end - suffix),
-                          out, out_size) == 0)
-            return 0;
-        suffix = (*end == ';') ? end + 1 : end;
-    }
-    return -1;
-}
-
 int libcmd_find_exec(const char *name,
                      const char *path_env,
                      char *out,
                      size_t out_size)
 {
     const char *start, *end;
-    int win = windows_conventions();
-    char sep = win ? ';' : ':';
+    char candidate[4096];
 
     if (name == NULL || out == NULL || out_size == 0)
         return -1;
 
-    /* A name with a directory (or, under Windows' conventions, a volume)
-     * is not searched for */
-    if (strchr(name, '/') != NULL || (win && strchr(name, ':') != NULL))
-        return try_in_dir("", 0, name, win, out, out_size);
+    /* Absolute or relative path with directory separator */
+    if (strchr(name, '/') != NULL) {
+        if (is_runnable(name)) {
+            return libcmd_sprintf_s(out, out_size, "%s", name) >= 0 ? 0 : -1;
+        }
+        return -1;
+    }
 
     if (path_env == NULL)
-        path_env = win ? "" : "/usr/local/bin:/usr/bin:/bin";
+        path_env = "/usr/local/bin:/usr/bin:/bin";
 
     /* Windows cmd semantics: the current directory is searched before
      * PATH, so "build.sh" runs without a "./" prefix after cd. */
-    if (try_in_dir(".", 1, name, win, out, out_size) == 0)
-        return 0;
+    if (is_runnable(name)) {
+        return libcmd_sprintf_s(out, out_size, "./%s", name) >= 0 ? 0 : -1;
+    }
 
     start = path_env;
     while (start && *start) {
-        end = strchr(start, sep);
+        end = strchr(start, ':');
         if (end == NULL)
             end = start + strlen(start);
 
-        if (end > start &&
-            try_in_dir(start, (size_t)(end - start), name, win,
-                       out, out_size) == 0)
-            return 0;
+        if (end > start) {
+            if ((size_t)(end - start) + strlen(name) + 2 < sizeof(candidate)) {
+                memcpy(candidate, start, (size_t)(end - start));
+                candidate[end - start] = '/';
+                strcpy(candidate + (end - start) + 1, name);
 
-        start = (*end == sep) ? end + 1 : NULL;
+                if (is_runnable(candidate)) {
+                    return libcmd_sprintf_s(out, out_size,
+                                            "%s", candidate) >= 0 ? 0 : -1;
+                }
+            }
+        }
+
+        start = (*end == ':') ? end + 1 : NULL;
     }
 
     return -1;
