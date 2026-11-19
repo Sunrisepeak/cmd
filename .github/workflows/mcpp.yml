@@ -180,11 +180,12 @@ jobs:
           - { target: x86_64-uefi,           check: run, refusal: true }
           - { target: i686-dos-musl,         check: run, refusal: true, foldcase: true }
           - { target: i586-dos-djgpp,        check: run }
-          # A static ELF32 for the System V i386 kernel interface, run under an
-          # emulation of that interface (ibcs-us) in a user namespace.
-          - { target: i686-svr4-musl,        check: run, refusal: true, userns: true }
-          # Rows of this project's own (mcpp/platforms/): built over the system's base,
-          # run in an image of the system booted by dirun.
+          # A static ELF32 for the System V i386 kernel interface, run on the System V
+          # kernel: AT&T UNIX System V/386 Release 4.0 Version 3.0 in QEMU (xim's
+          # svr4-disk-image, technical verification only), this project's runner for the row.
+          - { target: i686-svr4-musl,        check: run, refusal: true }
+          # Rows of mcpp.platforms: built over the system's base, run in an image of the
+          # system booted by dirun.
           - { target: x86_64-hurd,           check: run, refusal: true }
           - { target: x86_64-haiku,          check: run, refusal: true }
     defaults:
@@ -230,14 +231,6 @@ jobs:
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
-
-      # The emulator asks for the root identity and has it in a user namespace; a
-      # runner image whose AppArmor refuses an unprivileged one is told to allow it.
-      - name: Allow an unprivileged user namespace
-        if: matrix.userns
-        run: |
-          unshare -Ur true 2>/dev/null || sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
-          unshare -Ur true
 
       # The row's runner, enabled for this run; test.bat is given with the run and
       # is in the program's working directory, wherever the runner starts it.

@@ -354,7 +354,7 @@ mcpp build --release --target i686-openkal
 ```
 
 </td></tr>
-<tr><td>UEFI x86_64<br><code>x86_64-uefi</code></td><td>runs ²</td><td>
+<tr><td>UEFI x86_64<br><code>x86_64-uefi</code></td><td>runs</td><td>
 
 ```sh
 mcpp build --release --target x86_64-uefi
@@ -402,20 +402,24 @@ mcpp build --release --target x86_64-haiku
 and on Linux x86_64 in PureDarwin (xnu with no macOS above it), booted from the developer
 preview its project publishes: an experiment, whose image is not mirrored.
 
-² The script without its part that writes files: on UEFI a file is not renamed and a listing
-shows names without their extension; under openkal DOS a subdirectory is not listed.
+² DOS without long names keeps a file's name in upper case (`F1.TXT` for `f1.txt`): there the
+script's output is compared without regard to case.
 
 ³ A static ELF32 executable that links nothing of a system and enters the kernel through the
-call gate. It is run under an emulation of the System V i386 interface on Linux x86_64 (ibcs-us,
-as UnixWare 7), not on a System V kernel, and it starts no external command there.
+call gate. It is run on a System V kernel: AT&T UNIX System V/386 Release 4.0 Version 3.0 in QEMU
+(xim's `svr4-disk-image`, technical verification only: the system is proprietary), booted by dirun
+as this project's runner for the row. The platform's own runner is an emulation of the interface
+(ibcs-us). The program starts no external command there (openkal-svr4 claims no
+`openkal.process`).
 
-⁴ A row this project states itself (`mcpp/platforms/`): built on Linux with the LLVM toolchain
-over the system's own base (Debian GNU/Hurd's glibc; Haiku's libroot), a sysroot package of the
-package index, and run in an image of the system (Debian's; a Haiku nightly) booted by dirun.
+⁴ A row of `mcpp.platforms` (mcpp-community/mcpp-platforms): built on Linux with the LLVM
+toolchain over the system's own base (Debian GNU/Hurd's glibc, at the versions of the image it
+runs in; Haiku's libroot), a sysroot package of the package index, and run in an image of the
+system (Debian's; a Haiku nightly) booted by dirun.
 
-The NetBSD and OpenBSD rows, and the openkal rows beyond mcpp's own, come from the platform
-the package index names for them. The FreeBSD, NetBSD, OpenBSD, Android, UEFI, DOS, System V,
-GNU/Hurd and Haiku rows, and the Darwin row on Linux, run
+The NetBSD, OpenBSD, GNU/Hurd and Haiku rows, and the openkal rows beyond mcpp's own, come
+from the platform the package index names for them. The FreeBSD, NetBSD, OpenBSD, Android,
+UEFI, DOS, System V, GNU/Hurd and Haiku rows, and the Darwin row on Linux, run
 in a machine or an emulator that mcpp installs on first use, so their runner is enabled on
 request: `[target.x86_64-uefi] runner = { enabled = true }` in `mcpp.toml` or this machine's
 `config.toml`, or `MCPP_TARGET_X86_64_UEFI_RUNNER_ENABLED=true` for one `mcpp run`. A file the

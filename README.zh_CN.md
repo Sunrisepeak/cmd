@@ -330,7 +330,7 @@ mcpp build --release --target i686-openkal
 ```
 
 </td></tr>
-<tr><td>UEFI x86_64<br><code>x86_64-uefi</code></td><td>运行 ²</td><td>
+<tr><td>UEFI x86_64<br><code>x86_64-uefi</code></td><td>运行</td><td>
 
 ```sh
 mcpp build --release --target x86_64-uefi
@@ -344,28 +344,28 @@ mcpp build --release --target i586-dos-djgpp
 ```
 
 </td></tr>
-<tr><td>MS-DOS (openkal, experimental)<br><code>i686-dos-musl</code></td><td>启动 ³</td><td>
+<tr><td>MS-DOS (openkal, experimental)<br><code>i686-dos-musl</code></td><td>运行 ²</td><td>
 
 ```sh
 mcpp build --release --target i686-dos-musl
 ```
 
 </td></tr>
-<tr><td>System V Release 4 i386 (openkal, preview)<br><code>i686-svr4-musl</code></td><td>运行 ⁴</td><td>
+<tr><td>System V Release 4 i386 (openkal, preview)<br><code>i686-svr4-musl</code></td><td>运行 ³</td><td>
 
 ```sh
 mcpp build --release --target i686-svr4-musl
 ```
 
 </td></tr>
-<tr><td>GNU/Hurd x86_64 (preview)<br><code>x86_64-hurd</code></td><td>运行 ⁵</td><td>
+<tr><td>GNU/Hurd x86_64 (preview)<br><code>x86_64-hurd</code></td><td>运行 ⁴</td><td>
 
 ```sh
 mcpp build --release --target x86_64-hurd
 ```
 
 </td></tr>
-<tr><td>Haiku x86_64 (preview)<br><code>x86_64-haiku</code></td><td>运行 ⁵</td><td>
+<tr><td>Haiku x86_64 (preview)<br><code>x86_64-haiku</code></td><td>运行 ⁴</td><td>
 
 ```sh
 mcpp build --release --target x86_64-haiku
@@ -377,16 +377,16 @@ mcpp build --release --target x86_64-haiku
 ¹ 一个只链接系统库的 Mach-O 可执行文件。它在 Intel Mac 上运行，也在 Linux x86_64 上的 PureDarwin
 （其上没有 macOS 的 xnu）中运行，该系统由其项目发布的开发者预览映像启动：属于实验，映像不作镜像。
 
-² 不含写文件的部分：固件的磁盘为只读。
+² 不支持长文件名的 DOS 以大写保存文件名（`f1.txt` 保存为 `F1.TXT`），因此该行比较脚本输出时不区分大小写。
 
-³ openkal-dos 的初始栈为 64 KiB（mcpplibs/openkal-dos#3）；批处理中的 `IF` 需要更多，脚本在此结束。
+³ 静态 ELF32 可执行文件，不链接系统的任何文件，经调用门进入内核。它运行在 System V 内核上：QEMU 中的
+AT&T UNIX System V/386 Release 4.0 Version 3.0（xim 的 `svr4-disk-image`，仅用于技术验证：该系统为专有软件），
+由 dirun 启动，作为本项目为该行指定的运行器。平台自身的运行器是该接口的模拟（ibcs-us）。程序在其中不启动外部命令
+（openkal-svr4 不声明 `openkal.process`）。
 
-⁴ 静态 ELF32 可执行文件，不链接系统的任何文件，经调用门进入内核。它在 Linux x86_64 上的 System V i386 接口模拟
-（ibcs-us，UnixWare 7 的接口）下运行，不是在 System V 内核上；在该模拟下不启动外部命令。
-
-⁵ 由本项目自行陈述的行（`mcpp/platforms/`）：在 Linux 上以 LLVM 工具链构建，基于系统自身的基础库
-（Debian GNU/Hurd 的 glibc；Haiku 的 libroot，均为包索引中的 sysroot 包），并在由 dirun 启动的系统映像
-（Debian 的映像；Haiku 的 nightly 映像）中运行。
+⁴ `mcpp.platforms`（mcpp-community/mcpp-platforms）中的行：在 Linux 上以 LLVM 工具链构建，基于系统自身的基础库
+（Debian GNU/Hurd 的 glibc，版本与其运行的映像一致；Haiku 的 libroot，均为包索引中的 sysroot 包），并在由 dirun
+启动的系统映像（Debian 的映像；Haiku 的 nightly 映像）中运行。
 
 UEFI、openkal DOS、System V、GNU/Hurd 与 Haiku 行，以及 Linux 上的 Darwin 行，在 mcpp 首次使用时安装的虚拟机或模拟器中运行，因此其运行器需显式启用：在 `mcpp.toml`
 或本机 `config.toml` 中写 `[target.x86_64-uefi] runner = { enabled = true }`，或对单次 `mcpp run`
