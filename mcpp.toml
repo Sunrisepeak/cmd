@@ -49,11 +49,13 @@ i586-dos-djgpp.platform  = "djgpp-platform@0.2.0"
 # that kernel: AT&T UNIX System V/386 Release 4.0 Version 3.0 in QEMU, booted by
 # dirun from xim's svr4-disk-image (TECHNICAL VERIFICATION ONLY: the system is
 # proprietary). Its disk driver reads a disk only behind the system's own label, so
-# a run's files disk carries it (dirun 0.8.0). The platform's own runner, an
-# emulation of the interface (ibcs-us), is replaced here.
+# a run's files disk carries it (dirun 0.8.0). The machine is QEMU's translator
+# (TCG): on a GitHub-hosted runner the kernel stopped while it booted under KVM,
+# and under TCG a run takes seconds. The platform's own runner, an emulation of
+# the interface (ibcs-us), is replaced here.
 [target.i686-svr4-musl]
 platform = "openkal-platform@0.30.1"
-runner   = { cmd = ["dirun", "--profile", "{pkg:svr4-disk-image}/dirun.toml", "--emulator", "{pkg:qemu-x86}/bin/qemu-system-x86_64", "--", "{}"], host = "any", hosts = ["linux-x86_64"], requires = ["xim:dirun@0.8.0", "xim:svr4-disk-image@4.0.3-20261119", "xim:qemu-x86@9.2.4-1"], enabled = false }
+runner   = { cmd = ["dirun", "--profile", "{pkg:svr4-disk-image}/dirun.toml", "--emulator", "{pkg:qemu-x86}/bin/qemu-system-x86_64", "--accel", "tcg", "--", "{}"], host = "any", hosts = ["linux-x86_64"], requires = ["xim:dirun@0.8.0", "xim:svr4-disk-image@4.0.3-20261119", "xim:qemu-x86@9.2.4-1"], enabled = false }
 
 # On a Linux machine the Darwin row is run in PureDarwin (xnu with no macOS
 # above it), booted by dirun from the image its project publishes; a Mac runs
