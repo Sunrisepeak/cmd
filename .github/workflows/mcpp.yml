@@ -50,11 +50,9 @@ jobs:
           for t in ${{ matrix.targets }}; do
             echo "::group::$t"
             # The script of the row: node and an openkal image under okrun start no
-            # program of this one (prepare.sh); on x86_64-windows-musl the interpreter
-            # does not find a program named by a path with a drive letter (measured:
-            # 'C:/Windows/system32/cmd.exe' is not recognized). Both line endings: a
-            # batch file from Unix ends its lines in LF alone, one from Windows in CR LF.
-            case "$t" in wasm32-emscripten|*-openkal|x86_64-windows-musl) np=no-process ;; *) np= ;; esac
+            # program of this one (prepare.sh). Both line endings: a batch file from
+            # Unix ends its lines in LF alone, one from Windows in CR LF.
+            case "$t" in wasm32-emscripten|*-openkal) np=no-process ;; *) np= ;; esac
             sh .github/mcpp/prepare.sh "chk-$t" $np
             tr -d '\r' < "chk-$t/test.bat" > test.bat
             awk '{ printf "%s\r\n", $0 }' test.bat > test-crlf.bat
@@ -171,9 +169,7 @@ jobs:
           - { target: aarch64-windows-gnu,   check: artifact }
           # Run on an Intel Mac (the job macos-x86_64), and here in PureDarwin: xnu with
           # no macOS above it, booted from its project's developer preview (an experiment).
-          # In PureDarwin the script starts no program: openkal-macos reports no execute
-          # bit there (mcpplibs/openkal-macos#53), by which the interpreter finds one.
-          - { target: x86_64-macos-musl,     check: artifact, run: true, refusal: true, run_process: false }
+          - { target: x86_64-macos-musl,     check: artifact, run: true, refusal: true }
           - { target: x86_64-freebsd,        check: run }
           - { target: aarch64-freebsd,       check: run }
           - { target: x86_64-netbsd,         check: run }
@@ -257,7 +253,7 @@ jobs:
           set -euo pipefail
           t='${{ matrix.target }}'
           export "MCPP_TARGET_$(echo "$t" | tr 'a-z-' 'A-Z_')_RUNNER_ENABLED=true"
-          sh .github/mcpp/prepare.sh check $([ '${{ matrix.process }}' = false ] || [ '${{ matrix.run_process }}' = false ] && echo no-process)
+          sh .github/mcpp/prepare.sh check $([ '${{ matrix.process }}' = false ] && echo no-process)
           if [ '${{ matrix.foldcase }}' = true ]; then export CHECK_FOLD_CASE=1; fi
           mcpp run cmd.exe --release --target "$t" --file check/test.bat=TEST.BAT -- /c TEST.BAT > run.txt
           sh check/check.sh run.txt

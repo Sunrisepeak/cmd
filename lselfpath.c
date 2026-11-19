@@ -59,15 +59,15 @@ void libcmd_init_self(const char *argv0)
         self_cwd[0] = '\0';
 }
 
-/* Return 1 if 'path' is a regular executable file. */
+/* Return 1 if 'path' is a regular file this process may execute
+ * (access(X_OK): a system may keep no execute bits for stat to report). */
 static int is_executable_file(const char *path)
 {
     struct stat st;
 
     if (stat(path, &st) != 0)
         return 0;
-    return S_ISREG(st.st_mode) &&
-           (st.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH));
+    return S_ISREG(st.st_mode) && access(path, X_OK) == 0;
 }
 
 /*

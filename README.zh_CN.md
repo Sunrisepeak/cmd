@@ -193,7 +193,7 @@ mcpp pack cmd.exe --profile web --target wasm32-emscripten --pkg-format web
 <details>
 <summary>更多目标：Linux、Windows、macOS、FreeBSD、Android、WebAssembly、openkal 映像、UEFI、DOS、System V、GNU/Hurd 与 Haiku</summary>
 
-**运行**：测试批处理输出与 Linux x86_64 相同（由 `.github/workflows/mcpp.yml` 检查）；**启动**：解释器能启动并退出；**构建**：未运行。脚本中启动程序的部分（经 `%COMSPEC%` 启动解释器自身）在无法启动程序的行上省略：浏览器与 node（WebAssembly）、okrun 下的 openkal 映像（能启动程序，但不能启动映像，见 mcpplibs/openkal-image#42）、UEFI、两个 DOS 行、`x86_64-windows-musl`（其解释器尚不能找到以盘符路径命名的程序），以及 PureDarwin（openkal-macos 在其上不报告可执行位，见 mcpplibs/openkal-macos#53）。
+**运行**：测试批处理输出与 Linux x86_64 相同（由 `.github/workflows/mcpp.yml` 检查）；**启动**：解释器能启动并退出；**构建**：未运行。脚本中启动程序的部分（经 `%COMSPEC%` 启动：解释器自身，Windows 上为系统的解释器）在无法启动程序的行上省略：浏览器与 node（WebAssembly）、okrun 下的 openkal 映像（能启动程序，但不能启动映像，见 mcpplibs/openkal-image#42）、UEFI 与两个 DOS 行。
 
 <table>
 <tr><th>目标</th><th>验证</th><th>构建命令</th></tr>
