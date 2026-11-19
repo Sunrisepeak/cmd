@@ -13,4 +13,5 @@ f3.txt
 okt removed
 42
 X=42
+child=3
 done

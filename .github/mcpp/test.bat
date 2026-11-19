@@ -22,6 +22,10 @@ if not exist okt echo okt removed
 rem end of files
 set /a X=6*7
 echo X=%X%
+rem process: a program the interpreter starts, itself (a run where no program can be started leaves this part out)
+"%COMSPEC%" /c exit 3
+echo child=%errorlevel%
+rem end of process
 echo done
 endlocal
 goto :eof
