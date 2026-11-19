@@ -33,12 +33,12 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#if defined(__FreeBSD__)
+#if defined(__FreeBSD__) && !defined(CMD_LIBC_MUSL)
 #include <sys/types.h>
 #include <sys/sysctl.h>
 #endif
 
-#if defined(__APPLE__)
+#if defined(__APPLE__) && !defined(CMD_LIBC_MUSL)
 #include <mach-o/dyld.h>
 #endif
 
@@ -59,15 +59,15 @@ void libcmd_init_self(const char *argv0)
         self_cwd[0] = '\0';
 }
 
-/* Return 1 if 'path' is a regular executable file. */
+/* Return 1 if 'path' is a regular file this process may execute
+ * (access(X_OK): a system may keep no execute bits for stat to report). */
 static int is_executable_file(const char *path)
 {
     struct stat st;
 
     if (stat(path, &st) != 0)
         return 0;
-    return S_ISREG(st.st_mode) &&
-           (st.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH));
+    return S_ISREG(st.st_mode) && access(path, X_OK) == 0;
 }
 
 /*
@@ -119,7 +119,7 @@ const char *libcmd_get_self_path(void)
     }
 
     /* 2. FreeBSD: sysctl(KERN_PROC_PATHNAME) */
-#if defined(__FreeBSD__)
+#if defined(__FreeBSD__) && !defined(CMD_LIBC_MUSL)
     {
         int mib[4];
         size_t len;
@@ -135,7 +135,7 @@ const char *libcmd_get_self_path(void)
 #endif
 
     /* 3. Darwin: _NSGetExecutablePath */
-#if defined(__APPLE__)
+#if defined(__APPLE__) && !defined(CMD_LIBC_MUSL)
     {
         uint32_t len = (uint32_t)sizeof(buf);
         if (_NSGetExecutablePath(buf, &len) == 0)

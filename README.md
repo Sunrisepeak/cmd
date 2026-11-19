@@ -166,9 +166,271 @@ msbuild cmd.sln /p:Configuration=Release
 
 #### mcpp
 
+mcpp builds for the host, or cross-builds for any target listed below.
+
 ```sh
 mcpp build --release
 ```
+
+An openkal image (`.oke`) runs on every system that has `okrun`:
+
+```sh
+mcpp build --release --target x86_64-openkal
+mcpp run --target x86_64-openkal -- /c ver
+```
+
+In a browser, the web profile and mcpp's `dist-web` plugin make a page
+([try it](https://sunrisepeak.github.io/cmd/)):
+
+```sh
+mcpp pack cmd.exe --profile web --target wasm32-emscripten --pkg-format web
+```
+
+<details>
+<summary>More targets: Linux, Windows, macOS, FreeBSD, NetBSD, OpenBSD, Android, WebAssembly, openkal images, UEFI, DOS, System V, GNU/Hurd and Haiku</summary>
+
+**runs**: a test batch script gives the same output as on Linux x86_64 (checked by `.github/workflows/mcpp.yml`); **starts**: the interpreter starts and exits; **builds**: not run. The script's part that starts a program (through `%COMSPEC%`: the interpreter itself, on Windows the system's) is left out where no program can be started: the browser and node (WebAssembly), an openkal image under okrun (it starts a program but not an image, mcpplibs/openkal-image#42), UEFI, both DOS rows, and `x86_64-windows-musl`, the POSIX build on Windows, which hands a started program its name with `/` for `\` (as a POSIX program wants it), where Windows' own interpreter reads it as switches.
+
+<table>
+<tr><th>Target</th><th>Verified</th><th>Build command</th></tr>
+<tr><td>Linux x86_64 (glibc)<br><code>x86_64-linux-gnu</code></td><td>runs</td><td>
+
+```sh
+mcpp build --release --target x86_64-linux-gnu
+```
+
+</td></tr>
+<tr><td>Linux x86_64 (musl, static)<br><code>x86_64-linux-musl</code></td><td>runs</td><td>
+
+```sh
+mcpp build --release --target x86_64-linux-musl
+```
+
+</td></tr>
+<tr><td>Linux aarch64 (glibc)<br><code>aarch64-linux-gnu</code></td><td>runs</td><td>
+
+```sh
+mcpp build --release --target aarch64-linux-gnu
+```
+
+</td></tr>
+<tr><td>Linux aarch64 (musl, static)<br><code>aarch64-linux-musl</code></td><td>runs</td><td>
+
+```sh
+mcpp build --release --target aarch64-linux-musl
+```
+
+</td></tr>
+<tr><td>Linux i686 (musl, static)<br><code>i686-linux-musl</code></td><td>runs</td><td>
+
+```sh
+mcpp build --release --target i686-linux-musl
+```
+
+</td></tr>
+<tr><td>Windows x86_64 (MinGW)<br><code>x86_64-windows-gnu</code></td><td>runs</td><td>
+
+```sh
+mcpp build --release --target x86_64-windows-gnu
+```
+
+</td></tr>
+<tr><td>Windows x86_64 (musl)<br><code>x86_64-windows-musl</code></td><td>runs</td><td>
+
+```sh
+mcpp build --release --target x86_64-windows-musl
+```
+
+</td></tr>
+<tr><td>Windows aarch64 (MinGW)<br><code>aarch64-windows-gnu</code></td><td>runs</td><td>
+
+```sh
+mcpp build --release --target aarch64-windows-gnu
+```
+
+</td></tr>
+<tr><td>macOS x86_64, and PureDarwin<br><code>x86_64-macos-musl</code></td><td>runs ¹</td><td>
+
+```sh
+mcpp build --release --target x86_64-macos-musl
+```
+
+</td></tr>
+<tr><td>macOS aarch64<br><code>aarch64-macos-musl</code></td><td>runs</td><td>
+
+```sh
+mcpp build --release --target aarch64-macos-musl
+```
+
+</td></tr>
+<tr><td>macOS aarch64 (Apple SDK, on a Mac)<br><code>aarch64-macos</code></td><td>runs</td><td>
+
+```sh
+mcpp build --release --target aarch64-macos
+```
+
+</td></tr>
+<tr><td>FreeBSD x86_64<br><code>x86_64-freebsd</code></td><td>runs</td><td>
+
+```sh
+mcpp build --release --target x86_64-freebsd
+```
+
+</td></tr>
+<tr><td>FreeBSD aarch64<br><code>aarch64-freebsd</code></td><td>runs</td><td>
+
+```sh
+mcpp build --release --target aarch64-freebsd
+```
+
+</td></tr>
+<tr><td>NetBSD x86_64<br><code>x86_64-netbsd</code></td><td>runs</td><td>
+
+```sh
+mcpp build --release --target x86_64-netbsd
+```
+
+</td></tr>
+<tr><td>NetBSD aarch64<br><code>aarch64-netbsd</code></td><td>runs</td><td>
+
+```sh
+mcpp build --release --target aarch64-netbsd
+```
+
+</td></tr>
+<tr><td>OpenBSD x86_64<br><code>x86_64-openbsd</code></td><td>runs</td><td>
+
+```sh
+mcpp build --release --target x86_64-openbsd
+```
+
+</td></tr>
+<tr><td>OpenBSD aarch64<br><code>aarch64-openbsd</code></td><td>runs</td><td>
+
+```sh
+mcpp build --release --target aarch64-openbsd
+```
+
+</td></tr>
+<tr><td>Android x86_64<br><code>x86_64-linux-android</code></td><td>runs</td><td>
+
+```sh
+mcpp build --release --target x86_64-linux-android
+```
+
+</td></tr>
+<tr><td>Android aarch64<br><code>aarch64-linux-android</code></td><td>builds</td><td>
+
+```sh
+mcpp build --release --target aarch64-linux-android
+```
+
+</td></tr>
+<tr><td>WebAssembly (Node.js)<br><code>wasm32-emscripten</code></td><td>runs</td><td>
+
+```sh
+mcpp build --release --target wasm32-emscripten
+```
+
+</td></tr>
+<tr><td>openkal image x86_64<br><code>x86_64-openkal</code></td><td>runs</td><td>
+
+```sh
+mcpp build --release --target x86_64-openkal
+```
+
+</td></tr>
+<tr><td>openkal image aarch64<br><code>aarch64-openkal</code></td><td>runs</td><td>
+
+```sh
+mcpp build --release --target aarch64-openkal
+```
+
+</td></tr>
+<tr><td>openkal image i386<br><code>i686-openkal</code></td><td>runs</td><td>
+
+```sh
+mcpp build --release --target i686-openkal
+```
+
+</td></tr>
+<tr><td>UEFI x86_64<br><code>x86_64-uefi</code></td><td>runs</td><td>
+
+```sh
+mcpp build --release --target x86_64-uefi
+```
+
+</td></tr>
+<tr><td>MS-DOS (DJGPP)<br><code>i586-dos-djgpp</code></td><td>runs</td><td>
+
+```sh
+mcpp build --release --target i586-dos-djgpp
+```
+
+</td></tr>
+<tr><td>MS-DOS (openkal, experimental)<br><code>i686-dos-musl</code></td><td>runs ²</td><td>
+
+```sh
+mcpp build --release --target i686-dos-musl
+```
+
+</td></tr>
+<tr><td>System V Release 4 i386 (openkal, preview)<br><code>i686-svr4-musl</code></td><td>runs ³</td><td>
+
+```sh
+mcpp build --release --target i686-svr4-musl
+```
+
+</td></tr>
+<tr><td>GNU/Hurd x86_64 (preview)<br><code>x86_64-hurd</code></td><td>runs ⁴</td><td>
+
+```sh
+mcpp build --release --target x86_64-hurd
+```
+
+</td></tr>
+<tr><td>Haiku x86_64 (preview)<br><code>x86_64-haiku</code></td><td>runs ⁴</td><td>
+
+```sh
+mcpp build --release --target x86_64-haiku
+```
+
+</td></tr>
+</table>
+
+¹ One Mach-O executable that links nothing but the system library. It is run on an Intel Mac,
+and on Linux x86_64 in PureDarwin (xnu with no macOS above it), booted from the developer
+preview its project publishes: an experiment, whose image is not mirrored.
+
+² DOS without long names keeps a file's name in upper case (`F1.TXT` for `f1.txt`): there the
+script's output is compared without regard to case.
+
+³ A static ELF32 executable that links nothing of a system and enters the kernel through the
+call gate. It is run on a System V kernel: AT&T UNIX System V/386 Release 4.0 Version 3.0 in QEMU
+(xim's `svr4-disk-image`, technical verification only: the system is proprietary), booted by dirun
+as this project's runner for the row. The platform's own runner is an emulation of the interface
+(ibcs-us). From openkal-platform 0.31.0 (openkal-svr4 0.3.0, `openkal.process`) the
+interpreter starts external commands there.
+
+⁴ A row of `mcpp.platforms` (mcpp-community/mcpp-platforms 0.2.1): built on Linux with the LLVM
+toolchain over the system's own base (Debian GNU/Hurd's glibc, at the versions of the image it
+runs in; Haiku's libroot), a sysroot package of the package index, and run in an image of the
+system (Debian's; a Haiku nightly) booted by dirun.
+
+The NetBSD, OpenBSD, GNU/Hurd and Haiku rows, and the openkal rows beyond mcpp's own, come
+from the platform the package index names for them. The FreeBSD, NetBSD, OpenBSD, Android,
+UEFI, DOS, System V, GNU/Hurd and Haiku rows, and the Darwin row on Linux, run
+in a machine or an emulator that mcpp installs on first use, so their runner is enabled on
+request: `[target.x86_64-uefi] runner = { enabled = true }` in `mcpp.toml` or this machine's
+`config.toml`, or `MCPP_TARGET_X86_64_UEFI_RUNNER_ENABLED=true` for one `mcpp run`. A file the
+program reads is given with the run:
+
+```sh
+MCPP_TARGET_X86_64_NETBSD_RUNNER_ENABLED=true \
+  mcpp run cmd.exe --release --target x86_64-netbsd --file test.bat -- /c test.bat
+```
+
+</details>
 
 #### Meson
 
