@@ -50,9 +50,12 @@ jobs:
           for t in ${{ matrix.targets }}; do
             echo "::group::$t"
             # The script of the row: node and an openkal image under okrun start no
-            # program of this one (prepare.sh). Both line endings: a batch file from
-            # Unix ends its lines in LF alone, one from Windows in CR LF.
-            case "$t" in wasm32-emscripten|*-openkal) np=no-process ;; *) np= ;; esac
+            # program of this one (prepare.sh). x86_64-windows-musl is the POSIX build
+            # on Windows: it hands a program its own name with '/' for '\', as for a
+            # POSIX program, and Windows' cmd.exe reads that as switches (measured:
+            # "The syntax of the command is incorrect"). Both line endings: a batch
+            # file from Unix ends its lines in LF alone, one from Windows in CR LF.
+            case "$t" in wasm32-emscripten|*-openkal|x86_64-windows-musl) np=no-process ;; *) np= ;; esac
             sh .github/mcpp/prepare.sh "chk-$t" $np
             tr -d '\r' < "chk-$t/test.bat" > test.bat
             awk '{ printf "%s\r\n", $0 }' test.bat > test-crlf.bat

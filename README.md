@@ -189,7 +189,7 @@ mcpp pack cmd.exe --profile web --target wasm32-emscripten --pkg-format web
 <details>
 <summary>More targets: Linux, Windows, macOS, FreeBSD, NetBSD, OpenBSD, Android, WebAssembly, openkal images, UEFI, DOS, System V, GNU/Hurd and Haiku</summary>
 
-**runs**: a test batch script gives the same output as on Linux x86_64 (checked by `.github/workflows/mcpp.yml`); **starts**: the interpreter starts and exits; **builds**: not run. The script's part that starts a program (through `%COMSPEC%`: the interpreter itself, on Windows the system's) is left out where no program can be started: the browser and node (WebAssembly), an openkal image under okrun (it starts a program but not an image, mcpplibs/openkal-image#42), UEFI and both DOS rows.
+**runs**: a test batch script gives the same output as on Linux x86_64 (checked by `.github/workflows/mcpp.yml`); **starts**: the interpreter starts and exits; **builds**: not run. The script's part that starts a program (through `%COMSPEC%`: the interpreter itself, on Windows the system's) is left out where no program can be started: the browser and node (WebAssembly), an openkal image under okrun (it starts a program but not an image, mcpplibs/openkal-image#42), UEFI, both DOS rows, and `x86_64-windows-musl`, the POSIX build on Windows, which hands a started program its name with `/` for `\` (as a POSIX program wants it), where Windows' own interpreter reads it as switches.
 
 <table>
 <tr><th>Target</th><th>Verified</th><th>Build command</th></tr>
