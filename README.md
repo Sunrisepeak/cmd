@@ -189,7 +189,7 @@ mcpp pack cmd.exe --profile web --target wasm32-emscripten --pkg-format web
 <details>
 <summary>More targets: Linux, Windows, macOS, FreeBSD, NetBSD, OpenBSD, Android, WebAssembly, openkal images, UEFI, DOS, System V, GNU/Hurd and Haiku</summary>
 
-**runs**: a test batch script gives the same output as on Linux x86_64 (checked by `.github/workflows/mcpp.yml`); **starts**: the interpreter starts and exits; **builds**: not run. The script's part that starts a program (the interpreter itself, through `%COMSPEC%`) is left out where no program can be started: the browser and node (WebAssembly), an openkal image under okrun (it starts a program but not an image, mcpplibs/openkal-image#42), UEFI, both DOS rows, System V until its row claims `openkal.process` (openkal-svr4 0.3.0), and `x86_64-windows-musl`, whose interpreter does not yet find a program named by a path with a drive letter.
+**runs**: a test batch script gives the same output as on Linux x86_64 (checked by `.github/workflows/mcpp.yml`); **starts**: the interpreter starts and exits; **builds**: not run. The script's part that starts a program (the interpreter itself, through `%COMSPEC%`) is left out where no program can be started: the browser and node (WebAssembly), an openkal image under okrun (it starts a program but not an image, mcpplibs/openkal-image#42), UEFI, both DOS rows, System V until its row claims `openkal.process` (openkal-svr4 0.3.0), `x86_64-windows-musl`, whose interpreter does not yet find a program named by a path with a drive letter, and PureDarwin, where openkal-macos reports no execute bit (mcpplibs/openkal-macos#53).
 
 <table>
 <tr><th>Target</th><th>Verified</th><th>Build command</th></tr>

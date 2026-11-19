@@ -66,7 +66,7 @@ runner   = { cmd = ["dirun", "--profile", "{pkg:svr4-disk-image}/dirun.toml", "-
 # program that passes its arguments on.
 [target.x86_64-macos-musl]
 run_under = ["env"]
-runner = { cmd = ["dirun", "--profile", "{pkg:puredarwin-disk-image}/dirun.toml", "--var", "firmware={pkg:ovmf}/share/edk2/edk2-x86_64-code.fd", "--emulator", "{pkg:qemu-x86}/bin/qemu-system-x86_64", "--", "{}"], host = "any", hosts = ["linux-x86_64"], requires = ["xim:dirun@0.7.0", "xim:puredarwin-disk-image@25.5-20261118", "xim:ovmf@9.2.4-4", "xim:qemu-x86@9.2.4-1"], enabled = false }
+runner = { cmd = ["dirun", "--profile", "{pkg:puredarwin-disk-image}/dirun.toml", "--var", "firmware={pkg:ovmf}/share/edk2/edk2-x86_64-code.fd", "--emulator", "{pkg:qemu-x86}/bin/qemu-system-x86_64", "--", "{}"], host = "any", hosts = ["linux-x86_64"], requires = ["xim:dirun@0.7.0", "xim:puredarwin-disk-image@25.5-20261118-1", "xim:ovmf@9.2.4-4", "xim:qemu-x86@9.2.4-1"], enabled = false }
 
 # The engine's own rows that openkal-platform serves (the musl rows of Linux
 # x86_64 and aarch64, Windows and macOS; openkal) take mcpp's default release of
