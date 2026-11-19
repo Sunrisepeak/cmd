@@ -68,11 +68,12 @@ runner   = { cmd = ["dirun", "--profile", "{pkg:svr4-disk-image}/dirun.toml", "-
 run_under = ["env"]
 runner = { cmd = ["dirun", "--profile", "{pkg:puredarwin-disk-image}/dirun.toml", "--var", "firmware={pkg:ovmf}/share/edk2/edk2-x86_64-code.fd", "--emulator", "{pkg:qemu-x86}/bin/qemu-system-x86_64", "--", "{}"], host = "any", hosts = ["linux-x86_64"], requires = ["xim:dirun@0.7.0", "xim:puredarwin-disk-image@25.5-20261118", "xim:ovmf@9.2.4-4", "xim:qemu-x86@9.2.4-1"], enabled = false }
 
-# The rows openkal-platform serves, the engine's own among them (the musl rows,
-# openkal, UEFI), take mcpp's default release of it: 0.29.2 from mcpp
-# 2026.11.18.1, whose build programs use mcpp.plugins 0.22.1, the version
-# above, and which states the hosts of each runner, so a row the machine starts
-# itself (x86_64-windows-musl on Windows) runs with none.
+# The engine's own rows that openkal-platform serves (the musl rows of Linux
+# x86_64 and aarch64, Windows and macOS; openkal) take mcpp's default release of
+# it: 0.29.2 from mcpp 2026.11.18.1, whose build programs use mcpp.plugins
+# 0.22.1, the version above, and which states the hosts of each runner, so a row
+# the machine starts itself (x86_64-windows-musl on Windows) runs with none. The
+# rows the index names it for (above) take the index's release, 0.30.1.
 
 # openkal's musl has neither sysctl nor _NSGetExecutablePath (lselfpath.c).
 [target.'cfg(c-abi = "musl")'.build]
