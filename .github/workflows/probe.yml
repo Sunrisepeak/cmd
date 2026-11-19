@@ -1,0 +1,25 @@
+name: probe
+# Temporary: how a Windows program started by x86_64-windows-musl's interpreter
+# reads argument zero written with '/' (wine misreads it), on a real Windows.
+on: pull_request
+jobs:
+  windows:
+    runs-on: windows-2022
+    timeout-minutes: 40
+    defaults: { run: { shell: bash } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: mcpp-community/setup-mcpp@v1
+        with: { version: 2026.11.18.1 }
+      - name: Probe
+        run: |
+          set -u
+          t=x86_64-windows-musl
+          mcpp build --release --target $t
+          sh .github/mcpp/prepare.sh chk
+          tr -d '\r' < chk/test.bat > test.bat
+          printf '@echo off\r\necho cs=%%COMSPEC%%\r\n"%%COMSPEC%%" /c exit 3\r\necho quoted-comspec=%%errorlevel%%\r\nC:/Windows/system32/cmd.exe /c exit 4\r\necho slash=%%errorlevel%%\r\nC:\\Windows\\system32\\cmd.exe /c exit 6\r\necho backslash=%%errorlevel%%\r\ncmd /c exit 5\r\necho bare=%%errorlevel%%\r\nC:/Windows/system32/whoami.exe\r\necho whoami=%%errorlevel%%\r\n' > p.bat
+          echo "== probe"; mcpp run cmd.exe --release --target $t -- /c p.bat || true
+          echo "== test.bat (whole script)"; s=0
+          mcpp run cmd.exe --release --target $t -- /c test.bat > run.txt || s=$?
+          cat run.txt; echo "status $s"; sh chk/check.sh run.txt && echo WHOLE-PASS || echo WHOLE-FAIL
