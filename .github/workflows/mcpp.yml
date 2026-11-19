@@ -177,9 +177,11 @@ jobs:
           - { target: x86_64-freebsd,        check: run }
           - { target: aarch64-freebsd,       check: run }
           - { target: x86_64-netbsd,         check: run }
-          - { target: aarch64-netbsd,        check: build }
+          # The aarch64 rows of NetBSD and OpenBSD run in their systems' arm64 images, in
+          # QEMU's translator (mcpp.platforms 0.2.1).
+          - { target: aarch64-netbsd,        check: run }
           - { target: x86_64-openbsd,        check: run }
-          - { target: aarch64-openbsd,       check: build }
+          - { target: aarch64-openbsd,       check: run }
           - { target: x86_64-linux-android,  check: run }
           - { target: aarch64-linux-android, check: build }
           # An openkal image under okrun starts a program, but not an image (itself):

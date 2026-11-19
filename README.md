@@ -291,7 +291,7 @@ mcpp build --release --target x86_64-netbsd
 ```
 
 </td></tr>
-<tr><td>NetBSD aarch64<br><code>aarch64-netbsd</code></td><td>builds</td><td>
+<tr><td>NetBSD aarch64<br><code>aarch64-netbsd</code></td><td>runs</td><td>
 
 ```sh
 mcpp build --release --target aarch64-netbsd
@@ -305,7 +305,7 @@ mcpp build --release --target x86_64-openbsd
 ```
 
 </td></tr>
-<tr><td>OpenBSD aarch64<br><code>aarch64-openbsd</code></td><td>builds</td><td>
+<tr><td>OpenBSD aarch64<br><code>aarch64-openbsd</code></td><td>runs</td><td>
 
 ```sh
 mcpp build --release --target aarch64-openbsd
@@ -412,7 +412,7 @@ as this project's runner for the row. The platform's own runner is an emulation 
 (ibcs-us). The program starts no external command there (openkal-svr4 claims no
 `openkal.process`).
 
-⁴ A row of `mcpp.platforms` (mcpp-community/mcpp-platforms): built on Linux with the LLVM
+⁴ A row of `mcpp.platforms` (mcpp-community/mcpp-platforms 0.2.1): built on Linux with the LLVM
 toolchain over the system's own base (Debian GNU/Hurd's glibc, at the versions of the image it
 runs in; Haiku's libroot), a sysroot package of the package index, and run in an image of the
 system (Debian's; a Haiku nightly) booted by dirun.
