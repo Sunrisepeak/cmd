@@ -193,7 +193,7 @@ mcpp pack cmd.exe --profile web --target wasm32-emscripten --pkg-format web
 <details>
 <summary>更多目标：Linux、Windows、macOS、FreeBSD、Android、WebAssembly、openkal 映像、UEFI、DOS、System V、GNU/Hurd 与 Haiku</summary>
 
-**运行**：测试批处理输出与 Linux x86_64 相同（由 `.github/workflows/mcpp.yml` 检查）；**启动**：解释器能启动并退出；**构建**：未运行。脚本中启动程序的部分（经 `%COMSPEC%` 启动解释器自身）在无法启动程序的行上省略：浏览器与 node（WebAssembly）、okrun 下的 openkal 映像（能启动程序，但不能启动映像，见 mcpplibs/openkal-image#42）、UEFI、两个 DOS 行、System V（在其行声明 `openkal.process` 之前，即 openkal-svr4 0.3.0），`x86_64-windows-musl`（其解释器尚不能找到以盘符路径命名的程序），以及 PureDarwin（openkal-macos 在其上不报告可执行位，见 mcpplibs/openkal-macos#53）。
+**运行**：测试批处理输出与 Linux x86_64 相同（由 `.github/workflows/mcpp.yml` 检查）；**启动**：解释器能启动并退出；**构建**：未运行。脚本中启动程序的部分（经 `%COMSPEC%` 启动解释器自身）在无法启动程序的行上省略：浏览器与 node（WebAssembly）、okrun 下的 openkal 映像（能启动程序，但不能启动映像，见 mcpplibs/openkal-image#42）、UEFI、两个 DOS 行、`x86_64-windows-musl`（其解释器尚不能找到以盘符路径命名的程序），以及 PureDarwin（openkal-macos 在其上不报告可执行位，见 mcpplibs/openkal-macos#53）。
 
 <table>
 <tr><th>目标</th><th>验证</th><th>构建命令</th></tr>
@@ -381,8 +381,8 @@ mcpp build --release --target x86_64-haiku
 
 ³ 静态 ELF32 可执行文件，不链接系统的任何文件，经调用门进入内核。它运行在 System V 内核上：QEMU 中的
 AT&T UNIX System V/386 Release 4.0 Version 3.0（xim 的 `svr4-disk-image`，仅用于技术验证：该系统为专有软件），
-由 dirun 启动，作为本项目为该行指定的运行器。平台自身的运行器是该接口的模拟（ibcs-us）。程序在其中不启动外部命令
-（openkal-svr4 不声明 `openkal.process`）。
+由 dirun 启动，作为本项目为该行指定的运行器。平台自身的运行器是该接口的模拟（ibcs-us）。自 openkal-platform 0.31.0
+（openkal-svr4 0.3.0，`openkal.process`）起，解释器可在其中启动外部命令。
 
 ⁴ `mcpp.platforms`（mcpp-community/mcpp-platforms）中的行：在 Linux 上以 LLVM 工具链构建，基于系统自身的基础库
 （Debian GNU/Hurd 的 glibc，版本与其运行的映像一致；Haiku 的 libroot，均为包索引中的 sysroot 包），并在由 dirun
