@@ -6,7 +6,7 @@ env:
 jobs:
   probe:
     runs-on: ubuntu-24.04
-    timeout-minutes: 45
+    timeout-minutes: 30
     defaults: { run: { shell: bash } }
     steps:
       - uses: actions/checkout@v4
@@ -15,16 +15,21 @@ jobs:
       - name: Probe
         run: |
           t=x86_64-openkal
-          mcpp build --release --target $t
-          img=$(find "$PWD/target" -type f -name 'cmd.exe*' -path "*$t*" | head -1); echo "image=$img"
-          file "$img" || true
-          echo "== A: COMSPEC as cmd sets it"
-          mcpp run cmd.exe --release --target $t -- /c 'echo cs=%COMSPEC%' || true
-          echo "== B: whole test.bat (with the program start)"
+          w() { echo "-- $*"; timeout 20 "$@"; echo "status $?"; }
+          mcpp build --release --target $t > /dev/null 2>&1
+          img=$(ls "$PWD"/target/$t/*/bin/cmd.exe.oke | head -1); echo "image=$img"
+          ok=$(find ~/.mcpp -type f -name okrun -path '*openkal-tools@0.7.1*' | head -1); echo "okrun=$ok"
+          echo "== D: okrun 0.7.1 directly"
+          w "$ok" /c exit 3
+          w "$ok" /c exit 3 < /dev/null
+          w "$ok" /nonexistent.oke < /dev/null
+          w "$ok" "$img" /c exit 3 < /dev/null
+          echo "== C: COMSPEC given as the image"
           cp .github/mcpp/test.bat .github/mcpp/expected.txt .github/mcpp/check.sh .
-          mcpp run cmd.exe --release --target $t -- /c test.bat > runB.txt; echo "status $?"; cat runB.txt; sh check.sh runB.txt && echo B-PASS || echo B-FAIL
-          echo "== C: COMSPEC given as the image's own path"
-          COMSPEC="$img" mcpp run cmd.exe --release --target $t -- /c '"%COMSPEC%" /c exit 3 & echo child=%ERRORLEVEL%' || true
-          COMSPEC="$img" mcpp run cmd.exe --release --target $t -- /c test.bat > runC.txt; echo "status $?"; grep -n 'child=' runC.txt; sh check.sh runC.txt && echo C-PASS || echo C-FAIL
-          echo "== D: okrun version"
-          find ~/.mcpp ~/.xlings -type f -name 'okrun*' 2>/dev/null | head -3
+          COMSPEC="$img" timeout 120 "$ok" "$img" /c test.bat > runC.txt < /dev/null; echo "status $?"; grep -n 'child=' runC.txt || true; sh check.sh runC.txt && echo C-PASS || echo C-FAIL
+          echo "== E: okrun 0.7.0 (openkal-platform 0.31.0)"
+          sed -i 's/"openkal-platform@0\.31\.1"/"openkal-platform@0.31.0"/' mcpp.toml
+          mcpp build --release --target $t > /dev/null 2>&1
+          ok0=$(find ~/.mcpp -type f -name okrun -path '*openkal-tools@0.7.0*' | head -1); echo "okrun=$ok0"
+          w "$ok0" /c exit 3 < /dev/null
+          w "$ok0" /nonexistent.oke < /dev/null
