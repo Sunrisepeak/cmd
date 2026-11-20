@@ -1,0 +1,37 @@
+name: probe-okrun-072
+on: pull_request
+env:
+  MCPP_VERSION: 2026.11.19.1
+  XLINGS_NON_INTERACTIVE: '1'
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    defaults: { run: { shell: 'bash --noprofile --norc {0}' } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: mcpp-community/setup-mcpp@v1
+        with: { version: '${{ env.MCPP_VERSION }}' }
+      - name: Probe
+        run: |
+          t=x86_64-openkal
+          w() { echo "-- $*"; timeout -k 5 20 "$@"; echo "status $?"; }
+          nested() { echo "-- nested: the image starts: $1"; timeout -k 5 40 "$ok" "$img" /c "$1" < /dev/null; echo "nested status $?"; }
+          mcpp build --release --target $t 2>&1 | grep -iE "okrun|openkal-tools|error" | head -6
+          img=$(ls "$PWD"/target/$t/*/bin/cmd.exe.oke | head -1); echo "image=$img"
+          ok=$(find ~/.mcpp ~/.xlings -type f -name okrun 2>/dev/null | head -1); echo "okrun=$ok"
+          echo "== D: okrun directly"
+          w "$ok" "$img" /c exit 3 < /dev/null
+          echo "== N: from inside the image"
+          nested '/bin/sh -c "exit 3"'
+          nested "\"$ok\" /c exit 3"
+          nested "\"$img\" /c exit 3"
+          nested "\"$img\" /c \"\"$img\" /c exit 5\""
+          echo "== A: COMSPEC as cmd sets it"
+          timeout -k 5 20 "$ok" "$img" /c 'echo cs=%COMSPEC%' < /dev/null
+          echo "== B: whole test.bat through mcpp run (COMSPEC as cmd sets it)"
+          cp .github/mcpp/test.bat .github/mcpp/expected.txt .github/mcpp/check.sh .
+          timeout -k 5 120 mcpp run cmd.exe --release --target $t -- /c test.bat > runB.txt < /dev/null; echo "status $?"; grep -n 'child=' runB.txt; sh check.sh runB.txt > /dev/null && echo B-PASS || echo B-FAIL
+          echo "== C: whole test.bat, COMSPEC given as the image"
+          COMSPEC="$img" timeout -k 5 120 "$ok" "$img" /c test.bat > runC.txt < /dev/null; echo "status $?"; grep -n 'child=' runC.txt; sh check.sh runC.txt && echo C-PASS || echo C-FAIL
+          echo "== leftover okrun processes"; pgrep -x okrun || echo none

@@ -45,16 +45,16 @@ defines = ["ENABLE_AUTOEXEC=1"]
 # pinned here (djgpp-platform 0.2.0, whose runner delivers a run's files).
 [target]
 i586-dos-djgpp.platform      = "djgpp-platform@0.2.0"
-x86_64-linux-musl.platform   = "openkal-platform@0.31.0"
-aarch64-linux-musl.platform  = "openkal-platform@0.31.0"
-i686-linux-musl.platform     = "openkal-platform@0.31.0"
-x86_64-windows-musl.platform = "openkal-platform@0.31.0"
-aarch64-macos-musl.platform  = "openkal-platform@0.31.0"
-x86_64-openkal.platform      = "openkal-platform@0.31.0"
-aarch64-openkal.platform     = "openkal-platform@0.31.0"
-i686-openkal.platform        = "openkal-platform@0.31.0"
-x86_64-uefi.platform         = "openkal-platform@0.31.0"
-i686-dos-musl.platform       = "openkal-platform@0.31.0"
+x86_64-linux-musl.platform   = "openkal-platform@0.31.2"
+aarch64-linux-musl.platform  = "openkal-platform@0.31.2"
+i686-linux-musl.platform     = "openkal-platform@0.31.2"
+x86_64-windows-musl.platform = "openkal-platform@0.31.2"
+aarch64-macos-musl.platform  = "openkal-platform@0.31.2"
+x86_64-openkal.platform      = "openkal-platform@0.31.2"
+aarch64-openkal.platform     = "openkal-platform@0.31.2"
+i686-openkal.platform        = "openkal-platform@0.31.2"
+x86_64-uefi.platform         = "openkal-platform@0.31.2"
+i686-dos-musl.platform       = "openkal-platform@0.31.2"
 
 # The System V row's implementation (openkal-svr4) is the platform's statement:
 # from 0.30.1 the row writes no PT_PHDR program header, which the kernel of System
@@ -68,7 +68,7 @@ i686-dos-musl.platform       = "openkal-platform@0.31.0"
 # and under TCG a run takes seconds. The platform's own runner, an emulation of
 # the interface (ibcs-us), is replaced here.
 [target.i686-svr4-musl]
-platform = "openkal-platform@0.31.0"
+platform = "openkal-platform@0.31.2"
 runner   = { cmd = ["dirun", "--profile", "{pkg:svr4-disk-image}/dirun.toml", "--emulator", "{pkg:qemu-x86}/bin/qemu-system-x86_64", "--accel", "tcg", "--", "{}"], host = "any", hosts = ["linux-x86_64"], requires = ["xim:dirun@0.8.0", "xim:svr4-disk-image@4.0.3-20261119", "xim:qemu-x86@9.2.4-1"], enabled = false }
 
 # On a Linux machine the Darwin row is run in PureDarwin (xnu with no macOS
@@ -81,7 +81,7 @@ runner   = { cmd = ["dirun", "--profile", "{pkg:svr4-disk-image}/dirun.toml", "-
 # the private parts of fork weakly, so the program starts where libSystem does not
 # export them (PureDarwin).
 [target.x86_64-macos-musl]
-platform  = "openkal-platform@0.31.0"
+platform  = "openkal-platform@0.31.2"
 run_under = ["env"]
 runner = { cmd = ["dirun", "--profile", "{pkg:puredarwin-disk-image}/dirun.toml", "--var", "firmware={pkg:ovmf}/share/edk2/edk2-x86_64-code.fd", "--emulator", "{pkg:qemu-x86}/bin/qemu-system-x86_64", "--", "{}"], host = "any", hosts = ["linux-x86_64"], requires = ["xim:dirun@0.7.0", "xim:puredarwin-disk-image@25.5-20261118-1", "xim:ovmf@9.2.4-4", "xim:qemu-x86@9.2.4-1"], enabled = false }
 
