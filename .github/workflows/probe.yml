@@ -7,7 +7,7 @@ jobs:
   probe:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
-    defaults: { run: { shell: bash } }
+    defaults: { run: { shell: 'bash --noprofile --norc {0}' } }
     steps:
       - uses: actions/checkout@v4
       - uses: mcpp-community/setup-mcpp@v1
@@ -15,21 +15,29 @@ jobs:
       - name: Probe
         run: |
           t=x86_64-openkal
-          w() { echo "-- $*"; timeout 20 "$@"; echo "status $?"; }
+          w() { echo "-- $*"; timeout -k 5 20 "$@"; echo "status $?"; }
+          snap() { sleep 8; echo "   processes:"; for p in $(pgrep -x okrun); do echo "   pid $p ppid $(ps -o ppid= -p $p) $(ps -o stat= -p $p) wchan=$(cat /proc/$p/wchan 2>/dev/null) $(tr '\0' ' ' < /proc/$p/cmdline | cut -c1-160)"; grep -E 'SigBlk|SigIgn' /proc/$p/status | sed 's/^/     /'; for tk in /proc/$p/task/*; do echo "     task $(basename $tk) $(cat $tk/stat | awk '{print $3}') wchan=$(cat $tk/wchan)"; done; done; }
+          nested() { echo "-- nested: $1 runs cmd image, which starts: $2"; ( timeout -k 5 40 "$1" "$img" /c "$2" < /dev/null; echo "nested status $?" ) & snap; wait; }
           mcpp build --release --target $t > /dev/null 2>&1
           img=$(ls "$PWD"/target/$t/*/bin/cmd.exe.oke | head -1); echo "image=$img"
           ok=$(find ~/.mcpp -type f -name okrun -path '*openkal-tools@0.7.1*' | head -1); echo "okrun=$ok"
           echo "== D: okrun 0.7.1 directly"
           w "$ok" /c exit 3
-          w "$ok" /c exit 3 < /dev/null
           w "$ok" /nonexistent.oke < /dev/null
           w "$ok" "$img" /c exit 3 < /dev/null
-          echo "== C: COMSPEC given as the image"
+          echo "== N: from inside the image (0.7.1)"
+          nested "$ok" "\"$ok\" /c exit 3"
+          nested "$ok" "\"$img\" /c exit 3"
+          nested "$ok" "/bin/sh -c \"exit 3\""
+          echo "== C: COMSPEC given as the image, whole test.bat"
           cp .github/mcpp/test.bat .github/mcpp/expected.txt .github/mcpp/check.sh .
-          COMSPEC="$img" timeout 120 "$ok" "$img" /c test.bat > runC.txt < /dev/null; echo "status $?"; grep -n 'child=' runC.txt || true; sh check.sh runC.txt && echo C-PASS || echo C-FAIL
+          COMSPEC="$img" timeout -k 5 120 "$ok" "$img" /c test.bat > runC.txt < /dev/null; echo "status $?"; grep -n 'child=' runC.txt; sh check.sh runC.txt && echo C-PASS || echo C-FAIL
           echo "== E: okrun 0.7.0 (openkal-platform 0.31.0)"
           sed -i 's/"openkal-platform@0\.31\.1"/"openkal-platform@0.31.0"/' mcpp.toml
           mcpp build --release --target $t > /dev/null 2>&1
+          img=$(ls "$PWD"/target/$t/*/bin/cmd.exe.oke | head -1)
           ok0=$(find ~/.mcpp -type f -name okrun -path '*openkal-tools@0.7.0*' | head -1); echo "okrun=$ok0"
-          w "$ok0" /c exit 3 < /dev/null
-          w "$ok0" /nonexistent.oke < /dev/null
+          w "$ok0" /c exit 3
+          nested "$ok0" "\"$ok0\" /c exit 3"
+          nested "$ok0" "/bin/sh -c \"exit 3\""
+          true
