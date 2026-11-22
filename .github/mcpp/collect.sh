@@ -1,18 +1,20 @@
 #!/bin/sh
-# collect.sh TARGET: a built target's files for a release, in dist/:
-#   dist/bare/<target>-<file>  the programs as built (the form of the project's releases)
-#   dist/pack/                 mcpp's package of the target (both programs, README, LICENSE)
+# collect.sh TARGET: a built target's files for a release, in rel/ (not dist/,
+# which mcpp pack empties):
+#   rel/bare/<target>-<file>  the programs as built (the form of the project's releases)
+#   rel/pack/                 mcpp's package of the target (both programs, README, LICENSE)
 # The web page is the package of wasm32-emscripten (the web job). A DJGPP program
 # is static by construction; mcpp packs it as such only when told (mcpp#1007).
 set -eu
 t=$1
-mkdir -p dist/bare dist/pack
+mkdir -p rel/bare rel/pack
 if [ "$t" = openkal ]; then
-  cp target/dist/cmd-*-openkal-bundle-all.tar.gz dist/pack/
+  cp target/dist/cmd-*-openkal-bundle-all.tar.gz rel/pack/
   exit 0
 fi
-find "target/$t" -path '*/bin/*' -type f | while read -r f; do
-  cp "$f" "dist/bare/$t-$(basename "$f")"
+# target/<target>/<build>/bin/<program>: the programs, not a step's intermediates.
+find "target/$t" -mindepth 3 -maxdepth 3 -path '*/bin/*' -type f | while read -r f; do
+  cp "$f" "rel/bare/$t-$(basename "$f")"
 done
 case $t in
   wasm32-emscripten) ;;
@@ -21,7 +23,7 @@ case $t in
 esac
 if [ "$t" != wasm32-emscripten ]; then
   # shellcheck disable=SC2086
-  mcpp pack --release --target "$t" --all-programs $mode -o dist/pack/ ||
+  mcpp pack --release --target "$t" --all-programs $mode -o rel/pack/ ||
     echo "::warning::$t: mcpp pack failed; the release has its programs as built only"
 fi
-ls -l dist/bare dist/pack
+ls -l rel/bare rel/pack
