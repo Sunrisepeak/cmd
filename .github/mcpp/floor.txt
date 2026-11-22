@@ -28,11 +28,11 @@ x86_64-hurd            L2
 x86_64-haiku           L2
 x86_64-openkal         L2
 aarch64-openkal        L2
-i686-openkal           L2
 openkal                L2
 x86_64-windows-musl    L1     a POSIX build: it hands a program its name with / for \, which Windows' cmd.exe reads as switches
 wasm32-emscripten      L1     WebAssembly has no processes
 web                    L1     WebAssembly has no processes; the page keeps its files for the session
 x86_64-uefi            L1     openkal-uefi offers no program start (mcpp#1005)
+i686-openkal           L1     okrun for i386 does not yet enter an image an image starts (mcpplibs/openkal-image#46)
 i686-dos-musl          L1     openkal-dos offers no program start (mcpp#1005)
 i586-dos-djgpp         L1     DJGPP has neither fork nor posix_spawn
