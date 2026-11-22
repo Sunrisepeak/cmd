@@ -12,8 +12,12 @@ aarch64-macos-musl     L2
 x86_64-macos-musl      L2
 x86_64-windows-gnu     L2
 aarch64-windows-gnu    L2
+x86_64-windows-msvc    L2
+i686-windows-msvc      L2
 x86_64-freebsd         L2
 aarch64-freebsd        L2
+x86_64-freebsd-musl    L2
+aarch64-freebsd-musl   L2
 x86_64-netbsd          L2
 aarch64-netbsd         L2
 x86_64-openbsd         L2

@@ -33,7 +33,7 @@ jobs:
           - { os: ubuntu-24.04,     targets: 'x86_64-linux-gnu x86_64-linux-musl i686-linux-musl wasm32-emscripten x86_64-openkal' }
           - { os: ubuntu-24.04-arm, targets: 'aarch64-linux-gnu aarch64-linux-musl aarch64-openkal' }
           - { os: macos-15,         targets: 'aarch64-macos aarch64-macos-musl' }
-          - { os: windows-2022,     targets: 'x86_64-windows-gnu x86_64-windows-musl' }
+          - { os: windows-2022,     targets: 'x86_64-windows-gnu x86_64-windows-msvc i686-windows-msvc x86_64-windows-musl' }
     defaults:
       run:
         shell: bash
@@ -168,6 +168,10 @@ jobs:
           - { target: x86_64-macos-musl,     check: artifact, run: true, refusal: true }
           - { target: x86_64-freebsd,        check: run }
           - { target: aarch64-freebsd,       check: run }
+          # FreeBSD with no C library of its own beneath: openkal-freebsd under
+          # openkal-musl, run in the same virtual machines.
+          - { target: x86_64-freebsd-musl,   check: run, refusal: true }
+          - { target: aarch64-freebsd-musl,  check: run, refusal: true }
           - { target: x86_64-netbsd,         check: run }
           # The aarch64 rows of NetBSD and OpenBSD run in their systems' arm64 images, in
           # QEMU's translator (mcpp.platforms 0.2.1).
