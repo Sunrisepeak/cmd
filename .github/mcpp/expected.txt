@@ -1,3 +1,4 @@
+-- L0
 1
 2
 3
@@ -7,11 +8,13 @@ errorlevel=5
 item a
 item b
 item c
+42
+X=42
+-- L1
 x
 f1.txt
 f3.txt
 okt removed
-42
-X=42
+-- L2
 child=3
 done

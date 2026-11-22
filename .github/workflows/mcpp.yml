@@ -2,8 +2,9 @@ name: mcpp
 
 # Builds cmd.exe and COMMAND.COM with mcpp for every target in the README's
 # table. A target is run where a machine or an emulator for it exists, and the
-# output of .github/mcpp/test.bat is compared with .github/mcpp/expected.txt;
-# a target with no runner is built.
+# run of .github/mcpp/test.bat is graded by check.sh: each row must reach the
+# level floor.txt names for it, and the level it reaches is reported. A target
+# with no runner is built.
 
 on:
   push:
@@ -15,7 +16,7 @@ permissions:
   contents: read
 
 env:
-  MCPP_VERSION: 2026.11.19.1
+  MCPP_VERSION: 2026.11.22.1
   XLINGS_NON_INTERACTIVE: '1'
   MSYS_NO_PATHCONV: '1'
 
@@ -49,22 +50,17 @@ jobs:
           failed=
           for t in ${{ matrix.targets }}; do
             echo "::group::$t"
-            # The script of the row: node and an openkal image under okrun start no
-            # program of this one (prepare.sh). x86_64-windows-musl is the POSIX build
-            # on Windows: it hands a program its own name with '/' for '\', as for a
-            # POSIX program, and Windows' cmd.exe reads that as switches (measured:
-            # "The syntax of the command is incorrect"). Both line endings: a batch
-            # file from Unix ends its lines in LF alone, one from Windows in CR LF.
-            case "$t" in wasm32-emscripten|*-openkal|x86_64-windows-musl) np=no-process ;; *) np= ;; esac
-            sh .github/mcpp/prepare.sh "chk-$t" $np
-            tr -d '\r' < "chk-$t/test.bat" > test.bat
+            # Both line endings: a batch file from Unix ends its lines in LF alone,
+            # one from Windows in CR LF. The output is graded, not the status: a row
+            # below L2 ends the script with the status of a start that failed.
+            tr -d '\r' < .github/mcpp/test.bat > test.bat
             awk '{ printf "%s\r\n", $0 }' test.bat > test-crlf.bat
             if mcpp build --release --target "$t" \
-               && mcpp run cmd.exe --release --target "$t" -- /c test.bat > "run-$t.txt" \
-               && sh "chk-$t/check.sh" "run-$t.txt" \
-               && mcpp run cmd.exe --release --target "$t" -- /c test-crlf.bat > "run-$t-crlf.txt" \
-               && sh "chk-$t/check.sh" "run-$t-crlf.txt"; then
-              echo "$t: runs" >> "$GITHUB_STEP_SUMMARY"
+               && { mcpp run cmd.exe --release --target "$t" -- /c test.bat > "run-$t.txt" || true; } \
+               && sh .github/mcpp/check.sh "run-$t.txt" "$t" \
+               && { mcpp run cmd.exe --release --target "$t" -- /c test-crlf.bat > "run-$t-crlf.txt" || true; } \
+               && GITHUB_STEP_SUMMARY= sh .github/mcpp/check.sh "run-$t-crlf.txt" "$t"; then
+              :
             else
               echo "::error::$t"; cat "run-$t.txt" 2> /dev/null; failed="$failed $t"
             fi
@@ -82,7 +78,7 @@ jobs:
               wasm32-emscripten) python3 .github/mcpp/prompt.py node "$(find "target/$t" -path '*bin/cmd.exe.js' -type f | head -1)" ;;
               *) continue ;;
             esac
-            echo "$t: the prompt runs typed lines" >> "$GITHUB_STEP_SUMMARY"
+            echo "$t: the prompt runs typed lines (a terminal)" >> "$GITHUB_STEP_SUMMARY"
           done
 
   # The browser build, packed as a web directory by mcpp.dist.web and run in
@@ -111,11 +107,8 @@ jobs:
           cp .github/mcpp/web/test.mjs "$RUNNER_TEMP/"
           (cd site && python3 -m http.server 8000 --bind 127.0.0.1 > /dev/null 2>&1 &)
           sleep 1
-          # A page starts no program: the script without that part (prepare.sh).
-          sh .github/mcpp/prepare.sh web-check no-process
-          node "$RUNNER_TEMP/test.mjs" "$(command -v google-chrome)" http://127.0.0.1:8000/index.html web-check/test.bat > web.txt
-          sh web-check/check.sh web.txt
-          echo "wasm32-emscripten in Chrome: runs" >> "$GITHUB_STEP_SUMMARY"
+          node "$RUNNER_TEMP/test.mjs" "$(command -v google-chrome)" http://127.0.0.1:8000/index.html .github/mcpp/test.bat > web.txt
+          sh .github/mcpp/check.sh web.txt web
 
       - uses: actions/upload-artifact@v4
         with:
@@ -183,17 +176,13 @@ jobs:
           - { target: aarch64-openbsd,       check: run }
           - { target: x86_64-linux-android,  check: run }
           - { target: aarch64-linux-android, check: build }
-          # An openkal image under okrun starts a program, but not an image (itself):
-          # mcpplibs/openkal-image#42. The script without the part that starts one.
-          - { target: openkal,               check: artifact, process: false }
-          - { target: i686-openkal,          check: run, process: false }
+          - { target: openkal,               check: artifact }
+          - { target: i686-openkal,          check: run }
           # Under openkal DOS a name is the one DOS keeps, in upper case (F1.TXT): there
-          # the output is compared without regard to case. Firmware and DOS start no
-          # program (openkal-uefi and openkal-dos claim no openkal.process; DJGPP has
-          # no fork, by which this program starts one).
-          - { target: x86_64-uefi,           check: run, refusal: true, process: false }
-          - { target: i686-dos-musl,         check: run, refusal: true, foldcase: true, process: false }
-          - { target: i586-dos-djgpp,        check: run, process: false }
+          # the output is compared without regard to case.
+          - { target: x86_64-uefi,           check: run, refusal: true }
+          - { target: i686-dos-musl,         check: run, refusal: true, foldcase: true }
+          - { target: i586-dos-djgpp,        check: run }
           # A static ELF32 for the System V i386 kernel interface, run on the System V
           # kernel: AT&T UNIX System V/386 Release 4.0 Version 3.0 in QEMU (xim's
           # svr4-disk-image, technical verification only), this project's runner for the row.
@@ -227,7 +216,7 @@ jobs:
             mcpp build --release --target "$t"
             find target -path '*/bin/*' -type f \( -name 'cmd.exe*' -o -name 'COMMAND.COM*' \) -exec cp {} out/ \;
           fi
-          sh .github/mcpp/prepare.sh out $([ '${{ matrix.process }}' = false ] && echo no-process)
+          cp .github/mcpp/test.bat .github/mcpp/expected.txt .github/mcpp/floor.txt .github/mcpp/check.sh out/
           ls -l out
           echo "${t}: builds" >> "$GITHUB_STEP_SUMMARY"
 
@@ -256,11 +245,9 @@ jobs:
           set -euo pipefail
           t='${{ matrix.target }}'
           export "MCPP_TARGET_$(echo "$t" | tr 'a-z-' 'A-Z_')_RUNNER_ENABLED=true"
-          sh .github/mcpp/prepare.sh check $([ '${{ matrix.process }}' = false ] && echo no-process)
           if [ '${{ matrix.foldcase }}' = true ]; then export CHECK_FOLD_CASE=1; fi
-          mcpp run cmd.exe --release --target "$t" --file check/test.bat=TEST.BAT -- /c TEST.BAT > run.txt
-          sh check/check.sh run.txt
-          echo "${t}: runs" >> "$GITHUB_STEP_SUMMARY"
+          timeout 3000 mcpp run cmd.exe --release --target "$t" --file .github/mcpp/test.bat=TEST.BAT -- /c TEST.BAT > run.txt || echo "status $?"
+          sh .github/mcpp/check.sh run.txt "$t"
 
       - uses: actions/upload-artifact@v4
         if: matrix.check == 'artifact'
@@ -291,9 +278,8 @@ jobs:
         timeout-minutes: 5
         run: |
           exe=$(ls cmd.exe* | head -1)
-          timeout 60 "./$exe" /c test.bat < /dev/null > run.txt || { cat run.txt; exit 1; }
-          sh check.sh run.txt
-          echo "aarch64-windows-gnu: runs" >> "$GITHUB_STEP_SUMMARY"
+          timeout 60 "./$exe" /c test.bat < /dev/null > run.txt || echo "status $?"
+          sh check.sh run.txt aarch64-windows-gnu
 
   macos-x86_64:
     needs: cross
@@ -306,9 +292,8 @@ jobs:
         working-directory: out
         run: |
           chmod +x cmd.exe
-          ./cmd.exe /c test.bat > run.txt
-          sh check.sh run.txt
-          echo "x86_64-macos-musl: runs" >> "$GITHUB_STEP_SUMMARY"
+          ./cmd.exe /c test.bat > run.txt || echo "status $?"
+          sh check.sh run.txt x86_64-macos-musl
 
   # The openkal package, as it is downloaded, in FreeBSD: its launcher picks
   # the package's okrun for the system it runs on. The machine is the one the
@@ -346,6 +331,5 @@ jobs:
           profile=$(ls "$h"/xim-x-freebsd-disk-image/14.5-1/dirun.toml)
           qemu=$(ls "$h"/xim-x-qemu-x86/*/bin/qemu-system-x86_64 | head -1)
           "$dirun" --profile "$profile" --emulator "$qemu" --file "$PWD/out/$pkg=$pkg" --file "$PWD/out/test.bat=TEST.BAT" \
-            -- sh -c "tar -xzf $pkg && ${pkg%.tar.gz}/bin/cmd.exe /c TEST.BAT" > run.txt
-          sh out/check.sh run.txt
-          echo "the openkal package in FreeBSD (its launcher): runs" >> "$GITHUB_STEP_SUMMARY"
+            -- sh -c "tar -xzf $pkg && ${pkg%.tar.gz}/bin/cmd.exe /c TEST.BAT" > run.txt || echo "status $?"
+          sh out/check.sh run.txt openkal

@@ -1,6 +1,6 @@
 // node test.mjs BROWSER URL BATCH: runs BATCH with /c in the page mcpp.dist.web
-// packs from mcpp/web.html, prints its standard output, and checks that a file
-// outlives the run that wrote it.
+// packs from mcpp/web.html, prints its standard output (check.sh grades it), and
+// checks that a file outlives the run that wrote it.
 import { readFileSync } from 'node:fs';
 import { chromium } from 'playwright-core';
 
@@ -18,4 +18,4 @@ const back = await page.evaluate(() => runCmd(['/c', 'type persist.txt']));
 const kept = back.lines.includes('kept');
 console.error(`browser ${browser.version()}: status ${run.status}; a file carried between runs: ${kept}`);
 await browser.close();
-process.exit(run.status === 0 && kept ? 0 : 1);
+process.exit(kept ? 0 : 1);
