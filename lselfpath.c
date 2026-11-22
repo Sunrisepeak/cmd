@@ -109,6 +109,13 @@ const char *libcmd_get_self_path(void)
 {
     static char buf[SELF_PATH_BUF_SIZE];
 
+    /* 0. argv[0] naming a file by a path: the program as it was started.
+     * A loader started explicitly (the system's ld.so, or a runner of
+     * images) is what procfs names then, not this program. */
+    if (self_argv0 != NULL && strchr(self_argv0, '/') != NULL &&
+        self_from_argv0(buf, sizeof(buf)) == 0)
+        return buf;
+
     /* 1. procfs */
     if (access("/proc/self/exe", X_OK) == 0) {
         int n = (int)readlink("/proc/self/exe", buf, sizeof(buf) - 1);
