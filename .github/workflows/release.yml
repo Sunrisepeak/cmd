@@ -1,0 +1,87 @@
+name: release
+
+# Publishes a release by hand: every target of mcpp.yml is built and run as on a
+# push, and only when all pass is the release made. Its files:
+#   bare  <target>-cmd.exe and <target>-COMMAND.COM, the programs as built
+#   pack  mcpp's package of each target, the web page and the openkal package
+#   and in either case the source archives of tpack.sh (cmd-<version>.tar, ...).
+# A program built on a machine CI does not have (MSYS2, i686 GNU/Hurd) is added
+# afterwards: gh release upload <version> <file>.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'The version, as tpack.sh and mcpp.toml state it (1.0.0)'
+        required: true
+      assets:
+        description: 'The programs: as built (bare), as mcpp packages (pack), or both'
+        type: choice
+        options: [both, bare, pack]
+        default: both
+      draft:
+        description: 'A draft, to look at before it is published'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  version:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: The version the sources state
+        run: |
+          v='${{ inputs.version }}'
+          grep -qx "VERSION=$v" tpack.sh || { echo "::error::tpack.sh does not state VERSION=$v"; exit 1; }
+          grep -qE "^version *= *\"$v\"" mcpp.toml || { echo "::error::mcpp.toml does not state version $v"; exit 1; }
+
+  build:
+    needs: version
+    uses: ./.github/workflows/mcpp.yml
+    with: { release: true }
+    permissions:
+      contents: write
+      pull-requests: write
+
+  publish:
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with: { pattern: 'release-*', path: dist, merge-multiple: true }
+
+      - name: The source archives (tpack.sh)
+        run: |
+          set -euo pipefail
+          sudo apt-get install -y -qq llvm sharutils > /dev/null
+          v='${{ inputs.version }}'
+          ./tpack.sh
+          mkdir -p dist/src
+          for f in cmd.tar cmd.tar.xz cmd.tar.uu cmd.gnu.a cmd.darwin.a cmd.bsd.a cmd.aix.a cmd.coff.a; do
+            mv "$f" "dist/src/cmd-$v.${f#cmd.}"
+          done
+
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          v='${{ inputs.version }}'
+          files=(dist/src/*)
+          case '${{ inputs.assets }}' in
+            bare) files+=(dist/bare/*) ;;
+            pack) files+=(dist/pack/*) ;;
+            *)    files+=(dist/bare/* dist/pack/*) ;;
+          esac
+          gh release create "$v" --target "$GITHUB_SHA" --title "cmd v$v" --generate-notes \
+            ${{ inputs.draft && '--draft' || '' }} "${files[@]}"
+          {
+            echo "cmd v$v: ${#files[@]} files ('${{ inputs.assets }}')."
+            echo "A program built elsewhere is added with: gh release upload $v <file>"
+          } >> "$GITHUB_STEP_SUMMARY"
