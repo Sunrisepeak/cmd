@@ -9,7 +9,6 @@ name: mcpp
 on:
   push:
     branches: [main]
-  pull_request:
   workflow_dispatch:
   # release.yml: the same builds and runs, each also keeping its files for the release.
   workflow_call:

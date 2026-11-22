@@ -9,6 +9,7 @@ name: release
 # afterwards: gh release upload <version> <file>.
 
 on:
+  pull_request:
   workflow_dispatch:
     inputs:
       version:
@@ -34,7 +35,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: The version the sources state
         run: |
-          v='${{ inputs.version }}'
+          v='1.0.0'
           grep -qx "VERSION=$v" tpack.sh || { echo "::error::tpack.sh does not state VERSION=$v"; exit 1; }
           grep -qE "^version *= *\"$v\"" mcpp.toml || { echo "::error::mcpp.toml does not state version $v"; exit 1; }
 
@@ -62,7 +63,7 @@ jobs:
           # llvm-ar --format=coff is LLVM 19 or later; uuencode is in sharutils.
           sudo apt-get install -y -qq llvm-19 sharutils > /dev/null
           export PATH="/usr/lib/llvm-19/bin:$PATH"
-          v='${{ inputs.version }}'
+          v='1.0.0'
           ./tpack.sh
           mkdir -p rel/src
           for f in cmd.tar cmd.tar.xz cmd.tar.uu cmd.gnu.a cmd.darwin.a cmd.bsd.a cmd.aix.a cmd.coff.a; do
@@ -74,16 +75,16 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          v='${{ inputs.version }}'
+          v='1.0.0'
           files=(rel/src/*)
-          case '${{ inputs.assets }}' in
+          case 'both' in
             bare) files+=(rel/bare/*) ;;
             pack) files+=(rel/pack/*) ;;
             *)    files+=(rel/bare/* rel/pack/*) ;;
           esac
           gh release create "$v" --target "$GITHUB_SHA" --title "cmd v$v" --generate-notes \
-            ${{ inputs.draft && '--draft' || '' }} "${files[@]}"
+            --draft "${files[@]}"
           {
-            echo "cmd v$v: ${#files[@]} files ('${{ inputs.assets }}')."
+            echo "cmd v$v: ${#files[@]} files ('both')."
             echo "A program built elsewhere is added with: gh release upload $v <file>"
           } >> "$GITHUB_STEP_SUMMARY"
