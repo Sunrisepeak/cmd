@@ -92,6 +92,10 @@ GNU 一双脚太快长大，走得出过去避免再失败。
       <img src="olinux.png" alt="cmd running on Linux" height="150" />
       <br/><sub><b>Linux</b></sub>
     </td>
+    <td align="center">
+      <a href="https://chenpi11.github.io/cmd/"><img src="oweb.png" alt="cmd running in a web browser" height="150" /></a>
+      <br/><sub><b><a href="https://chenpi11.github.io/cmd/">Web</a></b></sub>
+    </td>
   </tr>
 </table>
 
