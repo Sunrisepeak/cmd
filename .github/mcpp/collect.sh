@@ -12,8 +12,10 @@ if [ "$t" = openkal ]; then
   cp target/dist/cmd-*-openkal-bundle-all.tar.gz rel/pack/
   exit 0
 fi
-# target/<target>/<build>/bin/<program>: the programs, not a step's intermediates.
-find "target/$t" -mindepth 3 -maxdepth 3 -path '*/bin/*' -type f | while read -r f; do
+# target/<target>/<build>/bin/<program>: the two programs, not a step's intermediates
+# nor the run-time libraries mcpp places beside them (those are in the package).
+find "target/$t" -mindepth 3 -maxdepth 3 -path '*/bin/*' -type f \( -name 'cmd.exe*' -o -name 'COMMAND.COM*' \) |
+while read -r f; do
   cp "$f" "rel/bare/$t-$(basename "$f")"
 done
 case $t in
