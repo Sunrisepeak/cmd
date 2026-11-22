@@ -1,6 +1,6 @@
 # Building cmd with mcpp
 
-[简体中文](README.zh_CN.md) · [Try it in the browser](https://sunrisepeak.github.io/cmd/)
+[简体中文](README.zh_CN.md) · [Try it in the browser](https://chenpi11.github.io/cmd/)
 
 [mcpp](https://github.com/mcpp-community/mcpp) builds `cmd.exe` and `COMMAND.COM` for the
 machine you are on, or for any of 33 targets from that one machine: no toolchain to install

@@ -19,7 +19,7 @@ GNU 一双脚太快长大，走得出过去避免再失败。
 
 **仅依赖 libc 与 POSIX API/Win32 API。**
 
-**在浏览器中试用：<https://sunrisepeak.github.io/cmd/>**（无需安装，以 WebAssembly 运行）。
+**在浏览器中试用：<https://chenpi11.github.io/cmd/>**（无需安装，以 WebAssembly 运行）。
 
 **[README: American English](README.md)** |
 **[README: 简体中文](README.zh_CN.md)** |

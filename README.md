@@ -14,7 +14,7 @@ Born on GNU/Linux, runs on **EVERY UNIX-LIKE SYSTEMS** and Windows.
 
 **ONLY LIBC and POSIX API/Win32 API required.**
 
-**Try it in your browser: <https://sunrisepeak.github.io/cmd/>** (no install; it runs as WebAssembly).
+**Try it in your browser: <https://chenpi11.github.io/cmd/>** (no install; it runs as WebAssembly).
 
 **[README: American English](README.md)** |
 **[README: 简体中文](README.zh_CN.md)** |

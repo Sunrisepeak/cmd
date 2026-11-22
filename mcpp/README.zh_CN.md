@@ -1,6 +1,6 @@
 # 用 mcpp 构建 cmd
 
-[English](README.md) · [在浏览器中试用](https://sunrisepeak.github.io/cmd/)
+[English](README.md) · [在浏览器中试用](https://chenpi11.github.io/cmd/)
 
 [mcpp](https://github.com/mcpp-community/mcpp) 可为当前机器构建 `cmd.exe` 与 `COMMAND.COM`，也可在这一台机器上
 为 33 个目标中的任一个构建，无需为每个系统安装工具链。需要 mcpp 2026.11.22.1 或更新。
