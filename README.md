@@ -14,6 +14,8 @@ Born on GNU/Linux, runs on **EVERY UNIX-LIKE SYSTEMS** and Windows.
 
 **ONLY LIBC and POSIX API/Win32 API required.**
 
+**Try it in your browser: <https://sunrisepeak.github.io/cmd/>** (no install; it runs as WebAssembly).
+
 **[README: American English](README.md)** |
 **[README: 简体中文](README.zh_CN.md)** |
 **[README: 微软式中文](README.zh_MS.md)** |
@@ -176,8 +178,6 @@ mcpp build --release
 mcpp build --release --target x86_64-openkal   # one image, run by okrun on Linux, macOS, Windows, FreeBSD
 mcpp pack cmd.exe --profile web --target wasm32-emscripten --pkg-format web   # the page
 ```
-
-In a browser: [try it](https://sunrisepeak.github.io/cmd/).
 
 #### Meson
 

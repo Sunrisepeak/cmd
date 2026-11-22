@@ -19,6 +19,8 @@ GNU 一双脚太快长大，走得出过去避免再失败。
 
 **仅依赖 libc 与 POSIX API/Win32 API。**
 
+**在浏览器中试用：<https://sunrisepeak.github.io/cmd/>**（无需安装，以 WebAssembly 运行）。
+
 **[README: American English](README.md)** |
 **[README: 简体中文](README.zh_CN.md)** |
 **[README: 微软式中文](README.zh_MS.md)** |
@@ -179,8 +181,6 @@ mcpp build --release
 mcpp build --release --target x86_64-openkal   # 一个映像，由 okrun 在 Linux、macOS、Windows、FreeBSD 上运行
 mcpp pack cmd.exe --profile web --target wasm32-emscripten --pkg-format web   # 网页
 ```
-
-在浏览器中：[在线体验](https://sunrisepeak.github.io/cmd/)。
 
 #### Meson
 
