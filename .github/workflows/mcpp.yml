@@ -250,7 +250,13 @@ jobs:
           t='${{ matrix.target }}'
           export "MCPP_TARGET_$(echo "$t" | tr 'a-z-' 'A-Z_')_RUNNER_ENABLED=true"
           if [ '${{ matrix.foldcase }}' = true ]; then export CHECK_FOLD_CASE=1; fi
-          timeout 3000 mcpp run cmd.exe --release --target "$t" --file .github/mcpp/test.bat=TEST.BAT -- /c TEST.BAT > run.txt || echo "status $?"
+          # A machine that does not finish booting in dirun's time limit (the runner's
+          # load, not the program) is booted once more.
+          for attempt in 1 2; do
+            s=0; timeout 3000 mcpp run cmd.exe --release --target "$t" --file .github/mcpp/test.bat=TEST.BAT -- /c TEST.BAT > run.txt 2> run.err || s=$?
+            cat run.err >&2; echo "status $s"
+            grep -q 'time limit expired while booting' run.err || break
+          done
           sh .github/mcpp/check.sh run.txt "$t"
 
       - uses: actions/upload-artifact@v4
