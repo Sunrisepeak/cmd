@@ -56,8 +56,8 @@ verification only, the system is proprietary).
 ⁶ openkal-uefi and openkal-dos offer no program start yet; DJGPP has neither `fork` nor
 `posix_spawn`. Under openkal DOS a name is kept in upper case, so its output is compared
 without regard to case.
-⁷ An i386 image starts a program, but okrun for i386 does not yet enter an image an image
-starts (mcpplibs/openkal-image#46).
+⁷ An image starts a program everywhere; an image an image starts is not yet entered by okrun
+for i386 (mcpplibs/openkal-image#46) or in FreeBSD (#47), so there the package is L1.
 
 ## Running a target in a machine
 

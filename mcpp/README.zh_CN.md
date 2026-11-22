@@ -51,7 +51,7 @@ CI（`.github/workflows/mcpp.yml`）在每个能运行的目标上运行 `.githu
 `mcpp pack cmd.exe --profile web --target wasm32-emscripten --pkg-format web` 构建。
 ⁶ openkal-uefi 与 openkal-dos 尚不提供启动程序；DJGPP 既没有 `fork` 也没有 `posix_spawn`。openkal DOS
 以大写保存文件名，因此比较输出时不区分大小写。
-⁷ i386 映像能启动程序，但 i386 的 okrun 尚不能进入由映像启动的映像（mcpplibs/openkal-image#46）。
+⁷ 映像在各处都能启动程序；但 i386 的 okrun（mcpplibs/openkal-image#46）与 FreeBSD 中的 okrun（#47）尚不能进入由映像启动的映像，因此 FreeBSD 中的包为 L1。
 
 ## 在虚拟机中运行
 
