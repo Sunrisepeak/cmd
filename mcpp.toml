@@ -1,6 +1,6 @@
 [package]
 name        = "cmd"
-version     = "0.1.0"
+version     = "1.0.0"
 description = "A faithful reimplementation of the Windows cmd.exe command interpreter for Unix."
 mcpp        = ">=2026.11.22.1"
 
