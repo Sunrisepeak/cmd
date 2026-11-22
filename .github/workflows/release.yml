@@ -59,7 +59,9 @@ jobs:
       - name: The source archives (tpack.sh)
         run: |
           set -euo pipefail
-          sudo apt-get install -y -qq llvm sharutils > /dev/null
+          # llvm-ar --format=coff is LLVM 19 or later; uuencode is in sharutils.
+          sudo apt-get install -y -qq llvm-19 sharutils > /dev/null
+          export PATH="/usr/lib/llvm-19/bin:$PATH"
           v='${{ inputs.version }}'
           ./tpack.sh
           mkdir -p rel/src
